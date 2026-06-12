@@ -1,23 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getToken, verifyToken } from '@/lib/auth';
-import fs from 'fs';
-import path from 'path';
+import { createClient } from '@supabase/supabase-js';
 import { v4 as uuidv4 } from 'uuid';
 
-const UPLOAD_DIR = path.join(process.cwd(), 'public', 'uploads');
-const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
+const supabase = createClient(supabaseUrl, supabaseKey);
 
-/** POST /api/upload — 上传图片（需认证），返回可公开访问的 URL */
+const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+const BUCKET_NAME = 'uploads';
+
+/** POST /api/upload — 上传图片到 Supabase Storage（需认证） */
 export async function POST(request: NextRequest) {
   const token = getToken(request);
   const payload = verifyToken(token);
   if (!payload) {
     return NextResponse.json({ error: '未授权' }, { status: 401 });
-  }
-
-  // 确保上传目录存在
-  if (!fs.existsSync(UPLOAD_DIR)) {
-    fs.mkdirSync(UPLOAD_DIR, { recursive: true });
   }
 
   try {
@@ -42,17 +40,33 @@ export async function POST(request: NextRequest) {
     // 生成唯一文件名
     const ext = file.name.split('.').pop() || 'jpg';
     const filename = `${uuidv4()}.${ext}`;
-    const filePath = path.join(UPLOAD_DIR, filename);
 
+    // 上传到 Supabase Storage
     const buffer = Buffer.from(await file.arrayBuffer());
-    fs.writeFileSync(filePath, buffer);
+    const { data, error } = await supabase.storage
+      .from(BUCKET_NAME)
+      .upload(filename, buffer, {
+        contentType: file.type,
+        upsert: false,
+      });
+
+    if (error) {
+      console.error('[upload] Supabase 上传失败:', error);
+      return NextResponse.json({ error: '上传失败: ' + error.message }, { status: 500 });
+    }
+
+    // 获取公开 URL
+    const { data: urlData } = supabase.storage
+      .from(BUCKET_NAME)
+      .getPublicUrl(filename);
 
     return NextResponse.json({
       success: true,
-      url: `/uploads/${filename}`,
+      url: urlData.publicUrl,
       filename,
     });
-  } catch {
-    return NextResponse.json({ error: '上传失败' }, { status: 500 });
+  } catch (err: any) {
+    console.error('[upload] 上传异常:', err);
+    return NextResponse.json({ error: '上传失败: ' + (err?.message || '未知错误') }, { status: 500 });
   }
 }
