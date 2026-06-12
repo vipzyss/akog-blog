@@ -20,7 +20,15 @@ const supabase = createClient(supabaseUrl, supabaseKey);
 /**
  * 通用 JSON 读写工具函数 —— 供验证码等临时数据使用
  * （核心业务数据已迁移到 Supabase）
+ * 自动检测 Vercel 环境使用 /tmp/data 目录
  */
+
+function getWritableDir(): string {
+  if (process.env.VERCEL) {
+    return path.join('/tmp', 'data');
+  }
+  return path.join(process.cwd(), 'data');
+}
 
 function ensureDir(dir: string) {
   if (!fs.existsSync(dir)) {

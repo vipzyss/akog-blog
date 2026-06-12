@@ -15,7 +15,7 @@ interface VerifyCode {
   createdAt: number;
 }
 
-const DATA_DIR = path.join(process.cwd(), 'data');
+const DATA_DIR = process.env.VERCEL ? path.join('/tmp', 'data') : path.join(process.cwd(), 'data');
 const CODES_FILE = path.join(DATA_DIR, 'verify-codes.json');
 const CODE_LENGTH = 6;
 const CODE_EXPIRE_MS = 5 * 60 * 1000;   // 5 分钟

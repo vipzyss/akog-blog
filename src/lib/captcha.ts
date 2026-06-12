@@ -5,7 +5,7 @@
 import path from 'path';
 import { readJSON, writeJSON } from './data';
 
-const DATA_DIR = path.join(process.cwd(), 'data');
+const DATA_DIR = process.env.VERCEL ? path.join('/tmp', 'data') : path.join(process.cwd(), 'data');
 const CAPTCHA_FILE = path.join(DATA_DIR, 'captcha-codes.json');
 const EXPIRE_MS = 5 * 60 * 1000; // 5 分钟
 
