@@ -1,0 +1,20 @@
+[
+  {
+    "id": "f22fa228-091c-4d7b-a4e6-779808098994",
+    "name": "前端",
+    "slug": "frontend",
+    "createdAt": "2026-06-11T13:40:17.270Z"
+  },
+  {
+    "id": "62da6934-9b4b-40ab-b38a-70b2adc381c0",
+    "name": "Next.js",
+    "slug": "nextjs",
+    "createdAt": "2026-06-11T13:40:17.270Z"
+  },
+  {
+    "id": "6d8b468c-20dc-44cc-85e2-bbc8de86d78b",
+    "name": "动画",
+    "slug": "anime",
+    "createdAt": "2026-06-11T13:40:17.270Z"
+  }
+]

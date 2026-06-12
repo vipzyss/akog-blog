@@ -1,0 +1,18 @@
+[
+  {
+    "id": "79356239-0354-49d4-a72c-e5eb08c8ea33",
+    "username": "testusr",
+    "displayName": "测试用户",
+    "email": "testusr@example.com",
+    "passwordHash": "$2b$10$wZ1a2XQMSCu2u/9ncrGJ5uPIj8H3suPoP7WNS1bdhV/42I.CNt/zu",
+    "createdAt": "2026-06-11T17:27:07.177Z"
+  },
+  {
+    "id": "d2fb178a-a8a1-4036-b99c-8e9d218e5127",
+    "username": "checkuser",
+    "displayName": "检查用户",
+    "email": "check@example.com",
+    "passwordHash": "$2b$10$MqrCsQbdNiMt0ms8cqyMpus.prG9wW2DWeWlLvDnGMDcDBemap7Aa",
+    "createdAt": "2026-06-11T17:27:19.225Z"
+  }
+]

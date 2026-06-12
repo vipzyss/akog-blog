@@ -1,0 +1,37 @@
+[
+  {
+    "id": "fd19b9d4-9fd7-471e-8c89-b91ec352a3e3",
+    "name": "技术",
+    "slug": "tech",
+    "description": "技术相关文章",
+    "createdAt": "2026-06-11T13:40:17.268Z"
+  },
+  {
+    "id": "c5a51b77-7fb4-4cc1-9bc5-3031fc9aaed6",
+    "name": "生活",
+    "slug": "life",
+    "description": "生活随笔",
+    "createdAt": "2026-06-11T13:40:17.269Z"
+  },
+  {
+    "id": "c5e50fac-6bd6-4751-831d-b874458b18aa",
+    "name": "二次元",
+    "slug": "anime",
+    "description": "二次元相关内容",
+    "createdAt": "2026-06-11T13:40:17.269Z"
+  },
+  {
+    "id": "19b90ea1-7f6d-4b46-af25-ef0399c1a009",
+    "name": "游戏",
+    "slug": "game",
+    "description": "游戏相关",
+    "createdAt": "2026-06-11T14:41:27.749Z"
+  },
+  {
+    "id": "a1b2c3d4-5e6f-7890-abcd-ef1234567890",
+    "name": "杂谈",
+    "slug": "misc",
+    "description": "天南海北，随心漫谈",
+    "createdAt": "2026-06-12T10:43:00.000Z"
+  }
+]
