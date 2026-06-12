@@ -12,7 +12,28 @@ import bcrypt from 'bcryptjs';
 // 直接用项目根目录下的 data/ 文件夹
 // Next.js 的 process.cwd() 在 dev 模式下指向项目根目录，打包后也一致
 // 如果找不到，兜底用相对于本文件的路径
+// Vercel 环境下写入 /tmp/data（只读文件系统不允许写入 process.cwd()）
 function getDataDir(): string {
+  // Vercel 环境 → 使用 /tmp/data
+  if (process.env.VERCEL) {
+    const tmpDir = path.join('/tmp', 'data');
+    if (!fs.existsSync(tmpDir)) {
+      fs.mkdirSync(tmpDir, { recursive: true });
+      // 从项目 data/ 复制初始数据到 /tmp/data
+      const srcData = path.join(process.cwd(), 'data');
+      if (fs.existsSync(srcData)) {
+        for (const file of fs.readdirSync(srcData)) {
+          const srcPath = path.join(srcData, file);
+          const destPath = path.join(tmpDir, file);
+          if (fs.statSync(srcPath).isFile() && !fs.existsSync(destPath)) {
+            fs.copyFileSync(srcPath, destPath);
+          }
+        }
+      }
+    }
+    return tmpDir;
+  }
+
   // 优先用 process.cwd() + 'data'（Next.js dev 模式）
   const cwdPath = path.join(process.cwd(), 'data');
   if (fs.existsSync(cwdPath)) {
