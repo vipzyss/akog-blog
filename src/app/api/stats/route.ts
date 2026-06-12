@@ -10,6 +10,6 @@ export async function GET(req: NextRequest) {
   if (!verifyToken(token)) {
     return NextResponse.json({ error: '未授权' }, { status: 401 });
   }
-  const stats = getStats();
+  const stats = await getStats();
   return NextResponse.json(stats);
 }

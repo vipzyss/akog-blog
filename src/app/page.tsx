@@ -3,9 +3,9 @@ import { HeroSection, CategoryNav, PostGrid } from '@/components/home/HomeClient
 
 export const revalidate = 60;
 
-function getFeaturedPosts() {
-  const posts = getPosts();
-  const categories = getCategories();
+async function getFeaturedPosts() {
+  const posts = await getPosts();
+  const categories = await getCategories();
 
   return posts
     .filter((p) => p.status === 'published')
@@ -25,19 +25,19 @@ function getFeaturedPosts() {
     }));
 }
 
-function getCategoriesWithCount() {
-  const categories = getCategories();
-  const posts = getPosts();
+async function getCategoriesWithCount() {
+  const categories = await getCategories();
+  const posts = await getPosts();
   return categories.map((cat) => ({
     ...cat,
     count: posts.filter((p) => p.categoryId === cat.id && p.status === 'published').length,
   }));
 }
 
-export default function HomePage() {
-  initDefaultData();
-  const posts = getFeaturedPosts();
-  const categories = getCategoriesWithCount();
+export default async function HomePage() {
+  await initDefaultData();
+  const posts = await getFeaturedPosts();
+  const categories = await getCategoriesWithCount();
 
   return (
     <div className="mx-auto max-w-6xl px-6 py-12">

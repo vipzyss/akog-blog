@@ -8,7 +8,7 @@ interface Props {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
-  const cat = getCategories().find((c) => c.slug === slug);
+  const cat = (await getCategories()).find((c) => c.slug === slug);
   return {
     title: cat ? `${cat.name} — 瞬云的尽头` : '分类 — 瞬云的尽头',
   };
@@ -16,7 +16,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function CategoryPage({ params }: Props) {
   const { slug } = await params;
-  const categories = getCategories();
+  const categories = await getCategories();
   const cat = categories.find((c) => c.slug === slug);
 
   if (!cat) {
@@ -28,7 +28,7 @@ export default async function CategoryPage({ params }: Props) {
     );
   }
 
-  const posts = getPosts()
+  const posts = (await getPosts())
     .filter((p) => p.categoryId === cat.id && p.status === 'published')
     .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 

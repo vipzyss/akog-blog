@@ -6,9 +6,9 @@ export const metadata: Metadata = {
   title: '分类 — 瞬云的尽头',
 };
 
-export default function CategoriesPage() {
-  const categories = getCategories();
-  const posts = getPosts();
+export default async function CategoriesPage() {
+  const categories = await getCategories();
+  const posts = await getPosts();
 
   const catsWithCount = categories.map((cat) => ({
     ...cat,

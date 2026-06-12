@@ -17,9 +17,9 @@ export async function GET(
   let post = null;
 
   if (by === 'slug') {
-    post = getPostBySlug(id);
+    post = await getPostBySlug(id);
   } else {
-    post = getPostById(id);
+    post = await getPostById(id);
   }
 
   if (!post) return NextResponse.json({ error: '未找到该文章' }, { status: 404 });
@@ -37,7 +37,7 @@ export async function PUT(
   }
   const { id } = await params;
   const body = await req.json();
-  const post = updatePost(id, body);
+  const post = await updatePost(id, body);
   if (!post) return NextResponse.json({ error: '未找到该文章' }, { status: 404 });
   return NextResponse.json(post);
 }
@@ -52,6 +52,6 @@ export async function DELETE(
     return NextResponse.json({ error: '未授权' }, { status: 401 });
   }
   const { id } = await params;
-  const ok = deletePost(id);
+  const ok = await deletePost(id);
   return NextResponse.json({ success: ok });
 }

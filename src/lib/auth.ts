@@ -56,8 +56,8 @@ export interface AuthResult {
   error?: string;
 }
 
-export function loginAdmin(identifier: string, password: string): AuthResult {
-  const user = getUserByIdentifier(identifier);
+export async function loginAdmin(identifier: string, password: string): Promise<AuthResult> {
+  const user = await getUserByIdentifier(identifier);
   if (!user) {
     return { success: false, error: '用户不存在' };
   }
@@ -83,19 +83,19 @@ export function loginAdmin(identifier: string, password: string): AuthResult {
   };
 }
 
-export function changeAdminPassword(
+export async function changeAdminPassword(
   userId: string,
   oldPassword: string,
   newPassword: string
-): { success: boolean; error?: string } {
-  const users = getUsers();
+): Promise<{ success: boolean; error?: string }> {
+  const users = await getUsers();
   const targetIdx = users.findIndex((u) => u.id === userId);
   if (targetIdx === -1) return { success: false, error: '用户不存在' };
   if (!compareSync(oldPassword, users[targetIdx].passwordHash)) {
     return { success: false, error: '原密码错误' };
   }
   users[targetIdx].passwordHash = hashSync(newPassword, 10);
-  saveUsers(users);
+  await saveUsers(users);
   return { success: true };
 }
 
@@ -122,25 +122,25 @@ export function validateUsername(username: string): { valid: boolean; error?: st
   return { valid: true };
 }
 
-export function registerReader(data: {
+export async function registerReader(data: {
   username: string;
   displayName?: string;
   email: string;
   password: string;
-}): ReaderAuthResult {
+}): Promise<ReaderAuthResult> {
   const v = validateUsername(data.username);
   if (!v.valid) {
     return { success: false, error: v.error };
   }
-  const existingUser = getUserByIdentifier(data.username) || getUserByIdentifier(data.email);
+  const existingUser = await getUserByIdentifier(data.username) || await getUserByIdentifier(data.email);
   if (existingUser) {
     return { success: false, error: '用户名或邮箱已被后台账号使用' };
   }
-  const existingReader = getReaderByIdentifier(data.username) || getReaderByIdentifier(data.email);
+  const existingReader = await getReaderByIdentifier(data.username) || await getReaderByIdentifier(data.email);
   if (existingReader) {
     return { success: false, error: '用户名或邮箱已被注册' };
   }
-  const reader = createReader({
+  const reader = await createReader({
     username: data.username,
     displayName: data.displayName || data.username,
     email: data.email,
@@ -164,8 +164,8 @@ export function registerReader(data: {
   };
 }
 
-export function loginReader(identifier: string, password: string): ReaderAuthResult {
-  const reader = getReaderByIdentifier(identifier);
+export async function loginReader(identifier: string, password: string): Promise<ReaderAuthResult> {
+  const reader = await getReaderByIdentifier(identifier);
   if (!reader) {
     return { success: false, error: '用户不存在' };
   }
@@ -192,17 +192,17 @@ export function loginReader(identifier: string, password: string): ReaderAuthRes
 
 // ==================== 获取当前登录用户 ====================
 
-export function getCurrentUser(token: string | null): {
+export async function getCurrentUser(token: string | null): Promise<{
   user?: { id: string; username: string; displayName?: string; email: string; role: string; avatar?: string } | null;
   reader?: { id: string; username: string; displayName?: string; email: string; avatar?: string } | null;
   payload?: TokenPayload;
-} {
+}> {
   const payload = verifyToken(token);
   if (!payload) return {};
   if (payload.role === 'reader') {
-    const reader = getReaderById(payload.userId);
+    const reader = await getReaderById(payload.userId);
     return { reader: reader ? { id: reader.id, username: reader.username, displayName: reader.displayName, email: reader.email, avatar: reader.avatar } : undefined, payload };
   }
-  const user = getUserById(payload.userId);
+  const user = await getUserById(payload.userId);
   return { user: user ? { id: user.id, username: user.username, displayName: user.displayName, email: user.email, role: user.role, avatar: user.avatar } : undefined, payload };
 }

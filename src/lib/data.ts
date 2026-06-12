@@ -1,60 +1,33 @@
 /**
- * 数据层 — 使用 JSON 文件存储（无需数据库服务器）
- * 文章、分类、标签、评论、用户、读者 — 全部存为 JSON
+ * 数据层 — 使用 Supabase 数据库
+ * 保留 readJSON/writeJSON 供验证码等临时数据使用
  */
 
+import { createClient } from '@supabase/supabase-js';
+import { v4 as uuidv4 } from 'uuid';
 import fs from 'fs';
 import path from 'path';
-import { fileURLToPath } from 'url';
-import { v4 as uuidv4 } from 'uuid';
-import bcrypt from 'bcryptjs';
 
-// 直接用项目根目录下的 data/ 文件夹
-// Next.js 的 process.cwd() 在 dev 模式下指向项目根目录，打包后也一致
-// 如果找不到，兜底用相对于本文件的路径
-// Vercel 环境下写入 /tmp/data（只读文件系统不允许写入 process.cwd()）
-function getDataDir(): string {
-  // Vercel 环境 → 使用 /tmp/data
-  if (process.env.VERCEL) {
-    const tmpDir = path.join('/tmp', 'data');
-    if (!fs.existsSync(tmpDir)) {
-      fs.mkdirSync(tmpDir, { recursive: true });
-      // 从项目 data/ 复制初始数据到 /tmp/data
-      const srcData = path.join(process.cwd(), 'data');
-      if (fs.existsSync(srcData)) {
-        for (const file of fs.readdirSync(srcData)) {
-          const srcPath = path.join(srcData, file);
-          const destPath = path.join(tmpDir, file);
-          if (fs.statSync(srcPath).isFile() && !fs.existsSync(destPath)) {
-            fs.copyFileSync(srcPath, destPath);
-          }
-        }
-      }
-    }
-    return tmpDir;
-  }
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 
-  // 优先用 process.cwd() + 'data'（Next.js dev 模式）
-  const cwdPath = path.join(process.cwd(), 'data');
-  if (fs.existsSync(cwdPath)) {
-    return cwdPath;
-  }
-  // 兜底：相对于本文件（src/lib/）往上 3 层
-  const __filename = fileURLToPath(import.meta.url);
-  const __dirname = path.dirname(__filename);
-  return path.resolve(__dirname, '../../../data');
+if (!supabaseUrl || !supabaseKey) {
+  console.warn('[data] Supabase 环境变量未配置，请设置 NEXT_PUBLIC_SUPABASE_URL 和 NEXT_PUBLIC_SUPABASE_ANON_KEY');
 }
 
-const DATA_DIR = getDataDir();
+const supabase = createClient(supabaseUrl, supabaseKey);
 
-// 确保数据目录存在
+/**
+ * 通用 JSON 读写工具函数 —— 供验证码等临时数据使用
+ * （核心业务数据已迁移到 Supabase）
+ */
+
 function ensureDir(dir: string) {
   if (!fs.existsSync(dir)) {
     fs.mkdirSync(dir, { recursive: true });
   }
 }
 
-// 通用 JSON 读写
 export function readJSON<T>(filePath: string, defaultVal: T): T {
   try {
     if (!fs.existsSync(filePath)) return defaultVal;
@@ -76,41 +49,46 @@ export type UserRole = 'admin' | 'editor' | 'author';
 
 export interface User {
   id: string;
-  username: string;       // 英文登录标识符（唯一，不可改）
-  displayName?: string;     // 显示名称（支持中文，可随时修改）
+  username: string;
+  displayName?: string;
   email: string;
   passwordHash: string;
   role: UserRole;
   avatar?: string;
-  bio?: string;           // 个人简介
+  bio?: string;
   createdAt: string;
 }
 
-const USERS_FILE = path.join(DATA_DIR, 'users.json');
-
-export function getUsers(): User[] {
-  return readJSON<User[]>(USERS_FILE, []);
+export async function getUsers(): Promise<User[]> {
+  const { data, error } = await supabase.from('users').select('*').order('createdAt', { ascending: false });
+  if (error) { console.error('[data] getUsers error:', error); return []; }
+  return data || [];
 }
 
-export function getUserById(id: string): User | null {
-  return getUsers().find((u) => u.id === id) || null;
+export async function getUserById(id: string): Promise<User | null> {
+  const { data, error } = await supabase.from('users').select('*').eq('id', id).single();
+  if (error || !data) return null;
+  return data as User;
 }
 
-export function getUserByIdentifier(identifier: string): User | null {
-  return getUsers().find(
-    (u) => u.username === identifier || u.email === identifier
-  ) || null;
+export async function getUserByIdentifier(identifier: string): Promise<User | null> {
+  const { data, error } = await supabase
+    .from('users')
+    .select('*')
+    .or(`username.eq.${identifier},email.eq.${identifier}`)
+    .maybeSingle();
+  if (error || !data) return null;
+  return data as User;
 }
 
-export function createUser(data: {
+export async function createUser(data: {
   username: string;
   displayName?: string;
   email: string;
   passwordHash: string;
   role?: UserRole;
-}): User {
-  const users = getUsers();
-  const user: User = {
+}): Promise<User> {
+  const user = {
     id: uuidv4(),
     username: data.username,
     displayName: data.displayName || data.username,
@@ -119,68 +97,78 @@ export function createUser(data: {
     role: data.role || 'author',
     createdAt: new Date().toISOString(),
   };
-  users.push(user);
-  writeJSON(USERS_FILE, users);
+  const { error } = await supabase.from('users').insert(user);
+  if (error) console.error('[data] createUser error:', error);
   return user;
 }
 
-export function updateUser(id: string, data: Partial<Omit<User, 'id' | 'createdAt'>>): User | null {
-  const users = getUsers();
-  const idx = users.findIndex((u) => u.id === id);
-  if (idx === -1) return null;
-  users[idx] = { ...users[idx], ...data };
-  writeJSON(USERS_FILE, users);
-  return users[idx];
+export async function updateUser(id: string, data: Partial<Omit<User, 'id' | 'createdAt'>>): Promise<User | null> {
+  const { data: updated, error } = await supabase.from('users').update(data).eq('id', id).select().single();
+  if (error || !updated) return null;
+  return updated as User;
 }
 
-export function deleteUser(id: string): boolean {
-  let users = getUsers();
-  const len = users.length;
-  users = users.filter((u) => u.id !== id);
-  writeJSON(USERS_FILE, users);
-  return users.length < len;
+export async function deleteUser(id: string): Promise<boolean> {
+  const { error } = await supabase.from('users').delete().eq('id', id);
+  return !error;
 }
 
-// 保存用户数组（供 auth.ts 的 changeAdminPassword 使用）
-export function saveUsers(users: User[]): void {
-  writeJSON(USERS_FILE, users);
+/** 直接保存整张用户表（供 auth.ts 的 changeAdminPassword 使用） */
+export async function saveUsers(users: User[]): Promise<void> {
+  // 逐条更新（changeAdminPassword 只改密码哈希）
+  for (const user of users) {
+    const { error } = await supabase.from('users').update({
+      passwordHash: user.passwordHash,
+      displayName: user.displayName,
+      email: user.email,
+      role: user.role,
+      avatar: user.avatar,
+      bio: user.bio,
+    }).eq('id', user.id);
+    if (error) console.error('[data] saveUsers error:', error);
+  }
 }
 
 // ==================== 前台读者（注册用户） ====================
 export interface Reader {
   id: string;
-  username: string;       // 英文登录标识符（唯一，不可改）
-  displayName?: string;     // 显示名称（支持中文，可随时修改）
+  username: string;
+  displayName?: string;
   email: string;
   passwordHash: string;
   avatar?: string;
   createdAt: string;
 }
 
-const READERS_FILE = path.join(DATA_DIR, 'readers.json');
-
-export function getReaders(): Reader[] {
-  return readJSON<Reader[]>(READERS_FILE, []);
+export async function getReaders(): Promise<Reader[]> {
+  const { data, error } = await supabase.from('readers').select('*').order('createdAt', { ascending: false });
+  if (error) { console.error('[data] getReaders error:', error); return []; }
+  return data || [];
 }
 
-export function getReaderByIdentifier(identifier: string): Reader | null {
-  return getReaders().find(
-    (r) => r.username === identifier || r.email === identifier
-  ) || null;
+export async function getReaderByIdentifier(identifier: string): Promise<Reader | null> {
+  const { data, error } = await supabase
+    .from('readers')
+    .select('*')
+    .or(`username.eq.${identifier},email.eq.${identifier}`)
+    .maybeSingle();
+  if (error || !data) return null;
+  return data as Reader;
 }
 
-export function getReaderById(id: string): Reader | null {
-  return getReaders().find((r) => r.id === id) || null;
+export async function getReaderById(id: string): Promise<Reader | null> {
+  const { data, error } = await supabase.from('readers').select('*').eq('id', id).single();
+  if (error || !data) return null;
+  return data as Reader;
 }
 
-export function createReader(data: {
+export async function createReader(data: {
   username: string;
   displayName?: string;
   email: string;
   passwordHash: string;
-}): Reader {
-  const readers = getReaders();
-  const reader: Reader = {
+}): Promise<Reader> {
+  const reader = {
     id: uuidv4(),
     username: data.username,
     displayName: data.displayName || data.username,
@@ -188,26 +176,20 @@ export function createReader(data: {
     passwordHash: data.passwordHash,
     createdAt: new Date().toISOString(),
   };
-  readers.push(reader);
-  writeJSON(READERS_FILE, readers);
+  const { error } = await supabase.from('readers').insert(reader);
+  if (error) console.error('[data] createReader error:', error);
   return reader;
 }
 
-export function deleteReader(id: string): boolean {
-  let readers = getReaders();
-  const len = readers.length;
-  readers = readers.filter((r) => r.id !== id);
-  writeJSON(READERS_FILE, readers);
-  return readers.length < len;
+export async function deleteReader(id: string): Promise<boolean> {
+  const { error } = await supabase.from('readers').delete().eq('id', id);
+  return !error;
 }
 
-export function updateReader(id: string, data: Partial<Omit<Reader, 'id' | 'username' | 'createdAt'>>): Reader | null {
-  const readers = getReaders();
-  const idx = readers.findIndex((r) => r.id === id);
-  if (idx === -1) return null;
-  readers[idx] = { ...readers[idx], ...data };
-  writeJSON(READERS_FILE, readers);
-  return readers[idx];
+export async function updateReader(id: string, data: Partial<Omit<Reader, 'id' | 'username' | 'createdAt'>>): Promise<Reader | null> {
+  const { data: updated, error } = await supabase.from('readers').update(data).eq('id', id).select().single();
+  if (error || !updated) return null;
+  return updated as Reader;
 }
 
 // ==================== 文章 ====================
@@ -216,10 +198,10 @@ export interface Post {
   slug: string;
   title: string;
   excerpt: string;
-  content: string;        // Markdown 内容
-  richContent: string;     // 富文本 HTML
+  content: string;
+  richContent: string;
   coverImage: string;
-  categoryId: string;
+  categoryId: string | null;
   tagIds: string[];
   status: 'draft' | 'published' | 'scheduled' | 'pending';
   publishedAt: string | null;
@@ -230,26 +212,27 @@ export interface Post {
   updatedAt: string;
 }
 
-const POSTS_FILE = path.join(DATA_DIR, 'posts.json');
-
-export function getPosts(): Post[] {
-  return readJSON<Post[]>(POSTS_FILE, []);
+export async function getPosts(): Promise<Post[]> {
+  const { data, error } = await supabase.from('posts').select('*').order('createdAt', { ascending: false });
+  if (error) { console.error('[data] getPosts error:', error); return []; }
+  return (data || []).map(mapPost);
 }
 
-export function getPostById(id: string): Post | null {
-  const posts = getPosts();
-  return posts.find((p) => p.id === id) || null;
+export async function getPostById(id: string): Promise<Post | null> {
+  const { data, error } = await supabase.from('posts').select('*').eq('id', id).single();
+  if (error || !data) return null;
+  return mapPost(data);
 }
 
-export function getPostBySlug(slug: string): Post | null {
-  const posts = getPosts();
-  return posts.find((p) => p.slug === slug) || null;
+export async function getPostBySlug(slug: string): Promise<Post | null> {
+  const { data, error } = await supabase.from('posts').select('*').eq('slug', slug).maybeSingle();
+  if (error || !data) return null;
+  return mapPost(data);
 }
 
-export function createPost(data: Partial<Post>): Post {
-  const posts = getPosts();
+export async function createPost(data: Partial<Post>): Promise<Post> {
   const now = new Date().toISOString();
-  const post: Post = {
+  const post = {
     id: uuidv4(),
     slug: data.slug || '',
     title: data.title || '未命名',
@@ -257,7 +240,7 @@ export function createPost(data: Partial<Post>): Post {
     content: data.content || '',
     richContent: data.richContent || '',
     coverImage: data.coverImage || '',
-    categoryId: data.categoryId || '',
+    categoryId: data.categoryId || null,
     tagIds: data.tagIds || [],
     status: data.status || 'draft',
     publishedAt: data.publishedAt || null,
@@ -267,30 +250,43 @@ export function createPost(data: Partial<Post>): Post {
     createdAt: now,
     updatedAt: now,
   };
-  posts.push(post);
-  writeJSON(POSTS_FILE, posts);
+  const { error } = await supabase.from('posts').insert(post);
+  if (error) console.error('[data] createPost error:', error);
   return post;
 }
 
-export function updatePost(id: string, data: Partial<Post>): Post | null {
-  const posts = getPosts();
-  const idx = posts.findIndex((p) => p.id === id);
-  if (idx === -1) return null;
-  posts[idx] = {
-    ...posts[idx],
-    ...data,
-    updatedAt: new Date().toISOString(),
-  };
-  writeJSON(POSTS_FILE, posts);
-  return posts[idx];
+export async function updatePost(id: string, data: Partial<Post>): Promise<Post | null> {
+  const updateData = { ...data, updatedAt: new Date().toISOString() };
+  const { data: updated, error } = await supabase.from('posts').update(updateData).eq('id', id).select().single();
+  if (error || !updated) return null;
+  return mapPost(updated);
 }
 
-export function deletePost(id: string): boolean {
-  let posts = getPosts();
-  const len = posts.length;
-  posts = posts.filter((p) => p.id !== id);
-  writeJSON(POSTS_FILE, posts);
-  return posts.length < len;
+export async function deletePost(id: string): Promise<boolean> {
+  const { error } = await supabase.from('posts').delete().eq('id', id);
+  return !error;
+}
+
+/** 将数据库行映射为 Post 对象 */
+function mapPost(row: any): Post {
+  return {
+    id: row.id,
+    slug: row.slug,
+    title: row.title,
+    excerpt: row.excerpt || '',
+    content: row.content || '',
+    richContent: row.richContent || '',
+    coverImage: row.coverImage || '',
+    categoryId: row.categoryId || '',
+    tagIds: row.tagIds || [],
+    status: row.status || 'draft',
+    publishedAt: row.publishedAt || null,
+    scheduledAt: row.scheduledAt || null,
+    views: row.views || 0,
+    likes: row.likes || 0,
+    createdAt: row.createdAt,
+    updatedAt: row.updatedAt,
+  };
 }
 
 // ==================== IP 浏览去重 ====================
@@ -300,31 +296,38 @@ interface ViewedIP {
   timestamp: string;
 }
 
-const VIEWED_IPS_FILE = path.join(DATA_DIR, 'viewedIPs.json');
-
-function getViewedIPs(): ViewedIP[] {
-  return readJSON<ViewedIP[]>(VIEWED_IPS_FILE, []);
+async function hasIPViewed(ip: string, slug: string): Promise<boolean> {
+  const { data, error } = await supabase
+    .from('viewed_ips')
+    .select('id')
+    .eq('ip', ip)
+    .eq('slug', slug)
+    .maybeSingle();
+  if (error) return false;
+  return !!data;
 }
 
-function hasIPViewed(ip: string, slug: string): boolean {
-  return getViewedIPs().some((v) => v.ip === ip && v.slug === slug);
+async function recordIPView(ip: string, slug: string): Promise<void> {
+  const { error } = await supabase.from('viewed_ips').insert({
+    id: uuidv4(),
+    ip,
+    slug,
+    timestamp: new Date().toISOString(),
+  });
+  if (error) console.error('[data] recordIPView error:', error);
 }
 
-function recordIPView(ip: string, slug: string): void {
-  const views = getViewedIPs();
-  views.push({ ip, slug, timestamp: new Date().toISOString() });
-  writeJSON(VIEWED_IPS_FILE, views);
-}
-
-export function incrementViews(slug: string, ip?: string): void {
-  if (ip && ip !== 'unknown' && hasIPViewed(ip, slug)) return;
-
-  const posts = getPosts();
-  const post = posts.find((p) => p.slug === slug);
+export async function incrementViews(slug: string, ip?: string): Promise<void> {
+  if (ip && ip !== 'unknown') {
+    const viewed = await hasIPViewed(ip, slug);
+    if (viewed) return;
+  }
+  // 递增 views
+  const { data: post } = await supabase.from('posts').select('id, views').eq('slug', slug).single();
   if (post) {
-    post.views += 1;
-    writeJSON(POSTS_FILE, posts);
-    if (ip && ip !== 'unknown') recordIPView(ip, slug);
+    const { error } = await supabase.from('posts').update({ views: (post.views || 0) + 1 }).eq('id', post.id);
+    if (error) console.error('[data] incrementViews error:', error);
+    if (ip && ip !== 'unknown') await recordIPView(ip, slug);
   }
 }
 
@@ -337,40 +340,34 @@ export interface Category {
   createdAt: string;
 }
 
-const CATEGORIES_FILE = path.join(DATA_DIR, 'categories.json');
-
-export function getCategories(): Category[] {
-  return readJSON<Category[]>(CATEGORIES_FILE, []);
+export async function getCategories(): Promise<Category[]> {
+  const { data, error } = await supabase.from('categories').select('*').order('createdAt', { ascending: true });
+  if (error) { console.error('[data] getCategories error:', error); return []; }
+  return data || [];
 }
 
-export function createCategory(data: Partial<Category>): Category {
-  const categories = getCategories();
-  const cat: Category = {
+export async function createCategory(data: Partial<Category>): Promise<Category> {
+  const cat = {
     id: uuidv4(),
     name: data.name || '未分类',
     slug: data.slug || '',
     description: data.description || '',
     createdAt: new Date().toISOString(),
   };
-  categories.push(cat);
-  writeJSON(CATEGORIES_FILE, categories);
+  const { error } = await supabase.from('categories').insert(cat);
+  if (error) console.error('[data] createCategory error:', error);
   return cat;
 }
 
-export function updateCategory(id: string, data: Partial<Category>): Category | null {
-  const categories = getCategories();
-  const idx = categories.findIndex((c) => c.id === id);
-  if (idx === -1) return null;
-  categories[idx] = { ...categories[idx], ...data };
-  writeJSON(CATEGORIES_FILE, categories);
-  return categories[idx];
+export async function updateCategory(id: string, data: Partial<Category>): Promise<Category | null> {
+  const { data: updated, error } = await supabase.from('categories').update(data).eq('id', id).select().single();
+  if (error || !updated) return null;
+  return updated as Category;
 }
 
-export function deleteCategory(id: string): boolean {
-  let categories = getCategories();
-  categories = categories.filter((c) => c.id !== id);
-  writeJSON(CATEGORIES_FILE, categories);
-  return true;
+export async function deleteCategory(id: string): Promise<boolean> {
+  const { error } = await supabase.from('categories').delete().eq('id', id);
+  return !error;
 }
 
 // ==================== 标签 ====================
@@ -381,30 +378,27 @@ export interface Tag {
   createdAt: string;
 }
 
-const TAGS_FILE = path.join(DATA_DIR, 'tags.json');
-
-export function getTags(): Tag[] {
-  return readJSON<Tag[]>(TAGS_FILE, []);
+export async function getTags(): Promise<Tag[]> {
+  const { data, error } = await supabase.from('tags').select('*').order('name', { ascending: true });
+  if (error) { console.error('[data] getTags error:', error); return []; }
+  return data || [];
 }
 
-export function createTag(data: Partial<Tag>): Tag {
-  const tags = getTags();
-  const tag: Tag = {
+export async function createTag(data: Partial<Tag>): Promise<Tag> {
+  const tag = {
     id: uuidv4(),
     name: data.name || '未命名标签',
     slug: data.slug || '',
     createdAt: new Date().toISOString(),
   };
-  tags.push(tag);
-  writeJSON(TAGS_FILE, tags);
+  const { error } = await supabase.from('tags').insert(tag);
+  if (error) console.error('[data] createTag error:', error);
   return tag;
 }
 
-export function deleteTag(id: string): boolean {
-  let tags = getTags();
-  tags = tags.filter((t) => t.id !== id);
-  writeJSON(TAGS_FILE, tags);
-  return true;
+export async function deleteTag(id: string): Promise<boolean> {
+  const { error } = await supabase.from('tags').delete().eq('id', id);
+  return !error;
 }
 
 // ==================== 评论 ====================
@@ -416,22 +410,28 @@ export interface Comment {
   content: string;
   approved: boolean;
   createdAt: string;
-  readerId?: string; // 关联注册读者（可选）
+  readerId?: string | null;
 }
 
-const COMMENTS_FILE = path.join(DATA_DIR, 'comments.json');
-
-export function getComments(): Comment[] {
-  return readJSON<Comment[]>(COMMENTS_FILE, []);
+export async function getComments(): Promise<Comment[]> {
+  const { data, error } = await supabase.from('comments').select('*').order('createdAt', { ascending: false });
+  if (error) { console.error('[data] getComments error:', error); return []; }
+  return data || [];
 }
 
-export function getCommentsByPost(postId: string): Comment[] {
-  return getComments().filter((c) => c.postId === postId && c.approved);
+export async function getCommentsByPost(postId: string): Promise<Comment[]> {
+  const { data, error } = await supabase
+    .from('comments')
+    .select('*')
+    .eq('postId', postId)
+    .eq('approved', true)
+    .order('createdAt', { ascending: true });
+  if (error) { console.error('[data] getCommentsByPost error:', error); return []; }
+  return data || [];
 }
 
-export function createComment(data: Partial<Comment>): Comment {
-  const comments = getComments();
-  const comment: Comment = {
+export async function createComment(data: Partial<Comment>): Promise<Comment> {
+  const comment = {
     id: uuidv4(),
     postId: data.postId || '',
     author: data.author || '匿名',
@@ -439,29 +439,21 @@ export function createComment(data: Partial<Comment>): Comment {
     content: data.content || '',
     approved: false,
     createdAt: new Date().toISOString(),
-    readerId: data.readerId,
+    readerId: data.readerId || null,
   };
-  comments.push(comment);
-  writeJSON(COMMENTS_FILE, comments);
+  const { error } = await supabase.from('comments').insert(comment);
+  if (error) console.error('[data] createComment error:', error);
   return comment;
 }
 
-export function approveComment(id: string): boolean {
-  const comments = getComments();
-  const comment = comments.find((c) => c.id === id);
-  if (comment) {
-    comment.approved = true;
-    writeJSON(COMMENTS_FILE, comments);
-    return true;
-  }
-  return false;
+export async function approveComment(id: string): Promise<boolean> {
+  const { error } = await supabase.from('comments').update({ approved: true }).eq('id', id);
+  return !error;
 }
 
-export function deleteComment(id: string): boolean {
-  let comments = getComments();
-  comments = comments.filter((c) => c.id !== id);
-  writeJSON(COMMENTS_FILE, comments);
-  return true;
+export async function deleteComment(id: string): Promise<boolean> {
+  const { error } = await supabase.from('comments').delete().eq('id', id);
+  return !error;
 }
 
 // ==================== 友链 ====================
@@ -474,15 +466,15 @@ export interface FriendLink {
   createdAt: string;
 }
 
-const FRIEND_LINKS_FILE = path.join(DATA_DIR, 'friend-links.json');
-
-export function getFriendLinks(): FriendLink[] {
-  return readJSON<FriendLink[]>(FRIEND_LINKS_FILE, []);
+export async function getFriendLinks(): Promise<FriendLink[]> {
+  const { data, error } = await supabase.from('friend_links').select('*').order('sort', { ascending: true });
+  if (error) { console.error('[data] getFriendLinks error:', error); return []; }
+  return data || [];
 }
 
-export function createFriendLink(data: { name: string; url: string; logo: string }): FriendLink {
-  const links = getFriendLinks();
-  const link: FriendLink = {
+export async function createFriendLink(data: { name: string; url: string; logo: string }): Promise<FriendLink> {
+  const links = await getFriendLinks();
+  const link = {
     id: uuidv4(),
     name: data.name,
     url: data.url,
@@ -490,26 +482,20 @@ export function createFriendLink(data: { name: string; url: string; logo: string
     sort: links.length,
     createdAt: new Date().toISOString(),
   };
-  links.push(link);
-  writeJSON(FRIEND_LINKS_FILE, links);
+  const { error } = await supabase.from('friend_links').insert(link);
+  if (error) console.error('[data] createFriendLink error:', error);
   return link;
 }
 
-export function updateFriendLink(id: string, data: Partial<Pick<FriendLink, 'name' | 'url' | 'logo' | 'sort'>>): FriendLink | null {
-  const links = getFriendLinks();
-  const idx = links.findIndex((l) => l.id === id);
-  if (idx === -1) return null;
-  links[idx] = { ...links[idx], ...data };
-  writeJSON(FRIEND_LINKS_FILE, links);
-  return links[idx];
+export async function updateFriendLink(id: string, data: Partial<Pick<FriendLink, 'name' | 'url' | 'logo' | 'sort'>>): Promise<FriendLink | null> {
+  const { data: updated, error } = await supabase.from('friend_links').update(data).eq('id', id).select().single();
+  if (error || !updated) return null;
+  return updated as FriendLink;
 }
 
-export function deleteFriendLink(id: string): boolean {
-  let links = getFriendLinks();
-  const len = links.length;
-  links = links.filter((l) => l.id !== id);
-  writeJSON(FRIEND_LINKS_FILE, links);
-  return links.length < len;
+export async function deleteFriendLink(id: string): Promise<boolean> {
+  const { error } = await supabase.from('friend_links').delete().eq('id', id);
+  return !error;
 }
 
 // ==================== 留言板 ====================
@@ -519,53 +505,47 @@ export interface GuestbookMessage {
   content: string;
   approved: boolean;
   createdAt: string;
-  readerId?: string;
+  readerId?: string | null;
 }
 
-const GUESTBOOK_FILE = path.join(DATA_DIR, 'guestbook.json');
-
-export function getGuestbookMessages(): GuestbookMessage[] {
-  return readJSON<GuestbookMessage[]>(GUESTBOOK_FILE, []);
+export async function getGuestbookMessages(): Promise<GuestbookMessage[]> {
+  const { data, error } = await supabase.from('guestbook_messages').select('*').order('createdAt', { ascending: false });
+  if (error) { console.error('[data] getGuestbookMessages error:', error); return []; }
+  return data || [];
 }
 
-export function createGuestbookMessage(data: { author: string; content: string; readerId?: string }): GuestbookMessage {
-  const messages = getGuestbookMessages();
-  const msg: GuestbookMessage = {
+export async function createGuestbookMessage(data: { author: string; content: string; readerId?: string }): Promise<GuestbookMessage> {
+  const msg = {
     id: uuidv4(),
     author: data.author,
     content: data.content,
     approved: false,
-    readerId: data.readerId,
+    readerId: data.readerId || null,
     createdAt: new Date().toISOString(),
   };
-  messages.push(msg);
-  writeJSON(GUESTBOOK_FILE, messages);
+  const { error } = await supabase.from('guestbook_messages').insert(msg);
+  if (error) console.error('[data] createGuestbookMessage error:', error);
   return msg;
 }
 
-export function approveGuestbookMessage(id: string): boolean {
-  const messages = getGuestbookMessages();
-  const msg = messages.find((m) => m.id === id);
-  if (msg) { msg.approved = true; writeJSON(GUESTBOOK_FILE, messages); return true; }
-  return false;
+export async function approveGuestbookMessage(id: string): Promise<boolean> {
+  const { error } = await supabase.from('guestbook_messages').update({ approved: true }).eq('id', id);
+  return !error;
 }
 
-export function deleteGuestbookMessage(id: string): boolean {
-  let messages = getGuestbookMessages();
-  const len = messages.length;
-  messages = messages.filter((m) => m.id !== id);
-  writeJSON(GUESTBOOK_FILE, messages);
-  return messages.length < len;
+export async function deleteGuestbookMessage(id: string): Promise<boolean> {
+  const { error } = await supabase.from('guestbook_messages').delete().eq('id', id);
+  return !error;
 }
 
 // ==================== 统计 ====================
-export function getStats() {
-  const posts = getPosts();
-  const comments = getComments();
-  const categories = getCategories();
-  const tags = getTags();
-  const users = getUsers();
-  const readers = getReaders();
+export async function getStats() {
+  const posts = await getPosts();
+  const comments = await getComments();
+  const categories = await getCategories();
+  const tags = await getTags();
+  const users = await getUsers();
+  const readers = await getReaders();
 
   const published = posts.filter((p) => p.status === 'published');
   const totalViews = posts.reduce((sum, p) => sum + p.views, 0);
@@ -598,44 +578,47 @@ export interface SiteSettings {
   siteDescription: string;
 }
 
-const SETTINGS_FILE = path.join(DATA_DIR, 'settings.json');
-
-export function getSiteSettings(): SiteSettings {
-  return readJSON<SiteSettings>(SETTINGS_FILE, {
-    siteName: '瞬云的尽头',
-    siteDescription: '探索虚拟世界的无限可能',
-  });
+export async function getSiteSettings(): Promise<SiteSettings> {
+  const { data, error } = await supabase.from('site_settings').select('*').eq('id', 1).single();
+  if (error || !data) {
+    return { siteName: '瞬云的尽头', siteDescription: '探索虚拟世界的无限可能' };
+  }
+  return { siteName: data.siteName || '瞬云的尽头', siteDescription: data.siteDescription || '探索虚拟世界的无限可能' };
 }
 
-export function updateSiteSettings(data: Partial<SiteSettings>): SiteSettings {
-  const settings = getSiteSettings();
-  const updated = { ...settings, ...data };
-  writeJSON(SETTINGS_FILE, updated);
-  return updated;
+export async function updateSiteSettings(data: Partial<SiteSettings>): Promise<SiteSettings> {
+  const { data: updated, error } = await supabase.from('site_settings').update(data).eq('id', 1).select().single();
+  if (error || !updated) {
+    return { siteName: '瞬云的尽头', siteDescription: '探索虚拟世界的无限可能' };
+  }
+  return { siteName: updated.siteName, siteDescription: updated.siteDescription };
 }
 
 // ==================== 初始化默认数据 ====================
-export function initDefaultData() {
-  ensureDir(DATA_DIR);
+export async function initDefaultData() {
+  const { hashSync } = await import('bcryptjs');
 
   // 初始化分类
-  if (getCategories().length === 0) {
-    createCategory({ name: '技术', slug: 'tech', description: '技术相关文章' });
-    createCategory({ name: '生活', slug: 'life', description: '生活随笔' });
-    createCategory({ name: '二次元', slug: 'anime', description: '二次元相关内容' });
+  const cats = await getCategories();
+  if (cats.length === 0) {
+    await createCategory({ name: '技术', slug: 'tech', description: '技术相关文章' });
+    await createCategory({ name: '生活', slug: 'life', description: '生活随笔' });
+    await createCategory({ name: '二次元', slug: 'anime', description: '二次元相关内容' });
   }
 
   // 初始化标签
-  if (getTags().length === 0) {
-    createTag({ name: '前端', slug: 'frontend' });
-    createTag({ name: 'Next.js', slug: 'nextjs' });
-    createTag({ name: '动画', slug: 'anime' });
+  const tags = await getTags();
+  if (tags.length === 0) {
+    await createTag({ name: '前端', slug: 'frontend' });
+    await createTag({ name: 'Next.js', slug: 'nextjs' });
+    await createTag({ name: '动画', slug: 'anime' });
   }
 
   // 初始化默认管理员账号
-  if (getUsers().length === 0) {
-    const hash = bcrypt.hashSync('q1589491q', 10);
-    createUser({
+  const users = await getUsers();
+  if (users.length === 0) {
+    const hash = hashSync('q1589491q', 10);
+    await createUser({
       username: 'shunyun',
       displayName: '瞬云',
       email: 'vipzyss@gmail.com',
@@ -644,11 +627,5 @@ export function initDefaultData() {
     });
   }
 
-  // 初始化站点设置
-  if (!fs.existsSync(SETTINGS_FILE)) {
-    writeJSON(SETTINGS_FILE, {
-      siteName: '瞬云的尽头',
-      siteDescription: '探索虚拟世界的无限可能',
-    });
-  }
+  // 初始化站点设置（SQL 里已插入默认值，无需额外操作）
 }

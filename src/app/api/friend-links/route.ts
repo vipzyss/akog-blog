@@ -15,7 +15,7 @@ import { getToken, verifyToken } from '@/lib/auth';
 
 /** 获取所有友链 — 公开接口 */
 export async function GET() {
-  const links = getFriendLinks().sort((a, b) => a.sort - b.sort);
+  const links = (await getFriendLinks()).sort((a, b) => a.sort - b.sort);
   return NextResponse.json(links);
 }
 
@@ -31,7 +31,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: '请填写友链名称和链接' }, { status: 400 });
   }
 
-  const link = createFriendLink({
+  const link = await createFriendLink({
     name: body.name,
     url: body.url,
     logo: body.logo || '',
@@ -52,7 +52,7 @@ export async function PUT(req: NextRequest) {
     return NextResponse.json({ error: '缺少友链 ID' }, { status: 400 });
   }
 
-  const link = updateFriendLink(body.id, {
+  const link = await updateFriendLink(body.id, {
     name: body.name,
     url: body.url,
     logo: body.logo,
@@ -74,6 +74,6 @@ export async function DELETE(req: NextRequest) {
   const id = searchParams.get('id');
   if (!id) return NextResponse.json({ error: '缺少友链 ID' }, { status: 400 });
 
-  deleteFriendLink(id);
+  await deleteFriendLink(id);
   return NextResponse.json({ success: true });
 }

@@ -11,14 +11,14 @@ export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const postId = searchParams.get('postId');
   if (postId) {
-    return NextResponse.json(getCommentsByPost(postId));
+    return NextResponse.json(await getCommentsByPost(postId));
   }
   // 管理员获取所有评论（需认证）
   const token = getToken(req);
   if (!verifyToken(token)) {
     return NextResponse.json({ error: '未授权' }, { status: 401 });
   }
-  return NextResponse.json(getComments());
+  return NextResponse.json(await getComments());
 }
 
 export async function POST(req: NextRequest) {
@@ -26,7 +26,7 @@ export async function POST(req: NextRequest) {
   if (!body.postId || !body.content) {
     return NextResponse.json({ error: '缺少必填字段' }, { status: 400 });
   }
-  const comment = createComment(body);
+  const comment = await createComment(body);
   return NextResponse.json(comment);
 }
 
@@ -42,7 +42,7 @@ export async function PUT(req: NextRequest) {
   if (!id) return NextResponse.json({ error: '缺少评论 ID' }, { status: 400 });
 
   if (action === 'approve') {
-    approveComment(id);
+    await approveComment(id);
     return NextResponse.json({ success: true });
   }
   return NextResponse.json({ error: '无效操作' }, { status: 400 });
@@ -57,6 +57,6 @@ export async function DELETE(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const id = searchParams.get('id');
   if (!id) return NextResponse.json({ error: '缺少评论 ID' }, { status: 400 });
-  deleteComment(id);
+  await deleteComment(id);
   return NextResponse.json({ success: true });
 }

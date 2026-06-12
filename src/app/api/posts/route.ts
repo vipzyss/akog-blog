@@ -19,7 +19,7 @@ import { getToken, verifyToken } from '@/lib/auth';
  */
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
-  let posts = getPosts();
+  let posts = await getPosts();
 
   // 过滤状态
   const status = searchParams.get('status') || 'published';
@@ -81,7 +81,7 @@ export async function POST(req: NextRequest) {
   }
 
   const body = await req.json();
-  const post = createPost(body);
+  const post = await createPost(body);
   return NextResponse.json(post);
 }
 
@@ -96,7 +96,7 @@ export async function PUT(req: NextRequest) {
   if (!body.id) {
     return NextResponse.json({ error: '缺少文章 ID' }, { status: 400 });
   }
-  const post = updatePost(body.id, body);
+  const post = await updatePost(body.id, body);
   if (!post) return NextResponse.json({ error: '未找到该文章' }, { status: 404 });
   return NextResponse.json(post);
 }
@@ -112,6 +112,6 @@ export async function DELETE(req: NextRequest) {
   const id = searchParams.get('id');
   if (!id) return NextResponse.json({ error: '缺少文章 ID' }, { status: 400 });
 
-  const ok = deletePost(id);
+  const ok = await deletePost(id);
   return NextResponse.json({ success: ok });
 }

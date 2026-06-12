@@ -15,9 +15,9 @@ export async function POST(
   let post = null;
   if (by === 'slug') {
     const slug = id;
-    post = getPostBySlug(slug);
+    post = await getPostBySlug(slug);
   } else {
-    post = getPostById(id);
+    post = await getPostById(id);
   }
 
   if (!post) {
@@ -25,7 +25,7 @@ export async function POST(
   }
 
   // 增加点赞数
-  const updated = updatePost(post.id, { likes: (post.likes || 0) + 1 });
+  const updated = await updatePost(post.id, { likes: (post.likes || 0) + 1 });
   
   if (!updated) {
     return NextResponse.json({ error: '更新失败' }, { status: 500 });

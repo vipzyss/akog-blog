@@ -9,7 +9,7 @@ import { getToken, verifyToken } from '@/lib/auth';
  */
 
 export async function GET() {
-  const tags = getTags();
+  const tags = await getTags();
   return NextResponse.json(tags);
 }
 
@@ -21,7 +21,7 @@ export async function POST(req: NextRequest) {
   }
 
   const body = await req.json();
-  const tag = createTag({
+  const tag = await createTag({
     name: body.name,
     slug: body.slug || body.name?.toLowerCase().replace(/\s+/g, '-'),
   });
@@ -42,6 +42,6 @@ export async function DELETE(req: NextRequest) {
     return NextResponse.json({ error: '缺少标签 ID' }, { status: 400 });
   }
 
-  deleteTag(id);
+  await deleteTag(id);
   return NextResponse.json({ success: true });
 }

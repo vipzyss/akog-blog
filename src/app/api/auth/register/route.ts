@@ -43,7 +43,7 @@ export async function POST(req: Request) {
       );
     }
 
-    const result = registerReader({ username, displayName, email, password });
+    const result = await registerReader({ username, displayName, email, password });
 
     if (!result.success) {
       return NextResponse.json(

@@ -16,7 +16,7 @@ interface Post {
   richContent: string;
   content: string;
   coverImage: string;
-  categoryId: string;
+  categoryId: string | null;
   publishedAt: string | null;
   views: number;
   likes: number;

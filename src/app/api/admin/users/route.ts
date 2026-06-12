@@ -20,13 +20,13 @@ export async function GET(req: Request) {
   }
 
   // 后台用户（admin + author）
-  const users = getUsers().map(({ passwordHash, ...u }) => ({
+  const users = (await getUsers()).map(({ passwordHash, ...u }) => ({
     ...u,
     accountType: 'admin' as const,
   }));
 
   // 前台读者
-  const readers = getReaders().map(({ passwordHash, ...r }) => ({
+  const readers = (await getReaders()).map(({ passwordHash, ...r }) => ({
     id: r.id,
     username: r.username,
     displayName: r.displayName || r.username,
@@ -53,7 +53,6 @@ export async function POST(req: Request) {
     if (!username || !email || !password) {
       return NextResponse.json({ error: '请填写所有必填项' }, { status: 400 });
     }
-    // 用户名格式验证
     if (!/^[a-zA-Z0-9_]+$/.test(username)) {
       return NextResponse.json({ error: '用户名只能包含英文字母、数字和下划线' }, { status: 400 });
     }
@@ -61,28 +60,28 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: '用户名长度需要在 3-20 个字符之间' }, { status: 400 });
     }
 
-    // 检查是否已存在于后台用户
-    const existingUser = getUsers().find(
+    const allUsers = await getUsers();
+    const existingUser = allUsers.find(
       (u) => u.username === username || u.email === email
     );
     if (existingUser) {
       return NextResponse.json({ error: '用户名或邮箱已被后台账号使用' }, { status: 400 });
     }
 
-    // 检查是否已存在于读者
-    const existingReader = getReaders().find(
+    const allReaders = await getReaders();
+    const existingReader = allReaders.find(
       (r) => r.username === username || r.email === email
     );
     if (existingReader) {
       return NextResponse.json({ error: '用户名或邮箱已被读者账号使用' }, { status: 400 });
     }
 
-    const user = createUser({
+    const user = await createUser({
       username,
       displayName,
       email,
       passwordHash: hashSync(password, 10),
-      role: 'author', // 新建用户均为普通用户组，仅 shunyun 为管理员
+      role: 'author',
     });
 
     const { passwordHash, ...safeUser } = user;
@@ -113,25 +112,24 @@ export async function PUT(req: Request) {
       if (email !== undefined) updateData.email = email;
       if (password) updateData.passwordHash = hashSync(password, 10);
 
-      // 如果要将读者升级为后台用户
       if (role === 'editor' || role === 'admin') {
-        const reader = getReaders().find((r) => r.id === id);
+        const allReaders = await getReaders();
+        const reader = allReaders.find((r) => r.id === id);
         if (!reader) {
           return NextResponse.json({ error: '读者不存在' }, { status: 404 });
         }
-        // 从 readers.json 移除，添加到 users.json
-        deleteReader(id);
-        const newUser = createUser({
+        await deleteReader(id);
+        const newUser = await createUser({
           username: reader.username,
           displayName: displayName || reader.displayName || reader.username,
           email: email || reader.email,
           passwordHash: password ? hashSync(password, 10) : reader.passwordHash,
         });
-        const { passwordHash: _, ...safeUser } = updateUser(newUser.id, { role: (role === 'admin' ? 'admin' : 'editor') as 'admin' | 'editor' })!;
-        return NextResponse.json({ user: { ...safeUser, accountType: 'admin' } });
+        await updateUser(newUser.id, { role: (role === 'admin' ? 'admin' : 'editor') as 'admin' | 'editor' });
+        return NextResponse.json({ user: { ...newUser, passwordHash: undefined, role: role, accountType: 'admin' } });
       }
 
-      const updated = updateReader(id, updateData);
+      const updated = await updateReader(id, updateData);
       if (!updated) {
         return NextResponse.json({ error: '读者不存在' }, { status: 404 });
       }
@@ -145,7 +143,6 @@ export async function PUT(req: Request) {
     if (email !== undefined) updateData.email = email;
     if (password) updateData.passwordHash = hashSync(password, 10);
 
-    // 角色变更（仅 shunyun 可设为 admin）
     if (role && role !== 'admin' && role !== 'editor' && role !== 'reader') {
       return NextResponse.json({ error: '无效的角色' }, { status: 400 });
     }
@@ -153,12 +150,12 @@ export async function PUT(req: Request) {
       return NextResponse.json({ error: '只有 shunyun 可以设为最高管理员' }, { status: 403 });
     }
     if (role) {
-      // 如果降级为读者：从 users.json 移到 readers.json
       if (role === 'reader') {
-        const user = getUsers().find((u) => u.id === id);
+        const allUsers = await getUsers();
+        const user = allUsers.find((u) => u.id === id);
         if (!user) return NextResponse.json({ error: '用户不存在' }, { status: 404 });
-        deleteUser(id);
-        createReader({
+        await deleteUser(id);
+        await createReader({
           username: user.username,
           displayName: displayName || user.displayName || user.username,
           email: email || user.email,
@@ -169,7 +166,7 @@ export async function PUT(req: Request) {
       updateData.role = role;
     }
 
-    const updated = updateUser(id, updateData);
+    const updated = await updateUser(id, updateData);
     if (!updated) {
       return NextResponse.json({ error: '用户不存在' }, { status: 404 });
     }
@@ -189,25 +186,24 @@ export async function DELETE(req: Request) {
 
   const { searchParams } = new URL(req.url);
   const id = searchParams.get('id');
-  const type = searchParams.get('type') || 'admin'; // 'admin' | 'reader'
+  const type = searchParams.get('type') || 'admin';
 
   if (!id) {
     return NextResponse.json({ error: '缺少用户 ID' }, { status: 400 });
   }
 
-  // 不能删除自己
   if (type === 'admin' && id === payload.userId) {
     return NextResponse.json({ error: '不能删除当前登录的账号' }, { status: 400 });
   }
 
   try {
     if (type === 'reader') {
-      const success = deleteReader(id);
+      const success = await deleteReader(id);
       if (!success) {
         return NextResponse.json({ error: '读者不存在' }, { status: 404 });
       }
     } else {
-      const success = deleteUser(id);
+      const success = await deleteUser(id);
       if (!success) {
         return NextResponse.json({ error: '用户不存在' }, { status: 404 });
       }

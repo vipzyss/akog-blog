@@ -22,7 +22,7 @@ export async function PUT(req: NextRequest) {
   }
 
   // 验证当前密码
-  const users = getUsers();
+  const users = await getUsers();
   const user = users.find((u) => u.id === payload.userId);
   if (!user) {
     return NextResponse.json({ error: '用户不存在' }, { status: 404 });
@@ -36,7 +36,7 @@ export async function PUT(req: NextRequest) {
   // 更新密码
   const newHash = await bcrypt.hash(newPassword, 10);
   user.passwordHash = newHash;
-  saveUsers(users);
+  await saveUsers(users);
 
   return NextResponse.json({ message: '密码修改成功' });
 }

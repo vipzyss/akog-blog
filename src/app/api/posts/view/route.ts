@@ -16,6 +16,6 @@ export async function POST(req: NextRequest) {
     req.headers.get('x-real-ip') ||
     'unknown';
 
-  incrementViews(slug, ip);
+  await incrementViews(slug, ip);
   return NextResponse.json({ success: true });
 }

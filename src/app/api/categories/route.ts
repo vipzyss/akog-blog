@@ -13,13 +13,13 @@ function requireAdmin(req: NextRequest): NextResponse | null {
 }
 
 export async function GET() {
-  return NextResponse.json(getCategories());
+  return NextResponse.json(await getCategories());
 }
 
 export async function POST(req: NextRequest) {
   const err = requireAdmin(req);
   if (err) return err;
-  const cat = createCategory(await req.json());
+  const cat = await createCategory(await req.json());
   return NextResponse.json(cat);
 }
 
@@ -28,7 +28,7 @@ export async function PUT(req: NextRequest) {
   if (err) return err;
   const body = await req.json();
   if (!body.id) return NextResponse.json({ error: '缺少分类 ID' }, { status: 400 });
-  const cat = updateCategory(body.id, body);
+  const cat = await updateCategory(body.id, body);
   if (!cat) return NextResponse.json({ error: '未找到该分类' }, { status: 404 });
   return NextResponse.json(cat);
 }
@@ -39,6 +39,6 @@ export async function DELETE(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const id = searchParams.get('id');
   if (!id) return NextResponse.json({ error: '缺少分类 ID' }, { status: 400 });
-  deleteCategory(id);
+  await deleteCategory(id);
   return NextResponse.json({ success: true });
 }

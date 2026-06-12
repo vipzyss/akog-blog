@@ -22,7 +22,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: '验证码错误或已过期' }, { status: 400 });
     }
 
-    const result = loginReader(identifier, password);
+    const result = await loginReader(identifier, password);
 
     if (!result.success) {
       return NextResponse.json(

@@ -20,7 +20,7 @@ interface PostSummary {
   title: string;
   excerpt: string;
   coverImage: string;
-  categoryId: string;
+  categoryId: string | null;
   tagIds: string[];
   publishedAt: string | null;
   views: number;

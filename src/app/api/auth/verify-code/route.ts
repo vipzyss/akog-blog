@@ -23,7 +23,7 @@ export async function POST(req: Request) {
     }
 
     // 检查邮箱是否已被后台用户使用
-    const existingUser = getUserByIdentifier(email);
+    const existingUser = await getUserByIdentifier(email);
     if (existingUser) {
       return NextResponse.json({ error: '该邮箱已被注册' }, { status: 400 });
     }

@@ -26,12 +26,12 @@ export async function GET(req: NextRequest) {
     if (!payload || payload.role !== 'admin') {
       return NextResponse.json({ error: '未授权' }, { status: 401 });
     }
-    const all = getGuestbookMessages()
+    const all = (await getGuestbookMessages())
       .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
     return NextResponse.json(all);
   }
 
-  const messages = getGuestbookMessages()
+  const messages = (await getGuestbookMessages())
     .filter((m) => m.approved)
     .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
   return NextResponse.json(messages);
@@ -56,14 +56,14 @@ export async function POST(req: NextRequest) {
 
   let author = payload.displayName || payload.username;
   if (payload.role === 'reader') {
-    const reader = getReaderById(payload.userId);
+    const reader = await getReaderById(payload.userId);
     if (reader) author = reader.displayName || reader.username;
   } else {
-    const user = getUserById(payload.userId);
+    const user = await getUserById(payload.userId);
     if (user) author = user.displayName || user.username;
   }
 
-  const msg = createGuestbookMessage({
+  await createGuestbookMessage({
     author,
     content: content.trim(),
     readerId: payload.role === 'reader' ? payload.userId : undefined,
@@ -85,7 +85,7 @@ export async function PUT(req: NextRequest) {
   if (!id) return NextResponse.json({ error: '缺少留言 ID' }, { status: 400 });
 
   if (action === 'approve') {
-    approveGuestbookMessage(id);
+    await approveGuestbookMessage(id);
     return NextResponse.json({ success: true });
   }
   return NextResponse.json({ error: '无效操作' }, { status: 400 });
@@ -102,6 +102,6 @@ export async function DELETE(req: NextRequest) {
   const id = searchParams.get('id');
   if (!id) return NextResponse.json({ error: '缺少留言 ID' }, { status: 400 });
 
-  deleteGuestbookMessage(id);
+  await deleteGuestbookMessage(id);
   return NextResponse.json({ success: true });
 }
