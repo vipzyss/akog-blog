@@ -40,7 +40,7 @@ export default async function HomePage() {
   const categories = await getCategoriesWithCount();
 
   return (
-    <div className="mx-auto max-w-6xl rounded-[32px] px-6 py-12">
+    <div className="mx-auto max-w-6xl rounded-[32px] overflow-hidden bg-[var(--glass-bg)] px-6 py-12">
       <HeroSection />
       <CategoryNav categories={categories} />
       <PostGrid posts={posts} />
