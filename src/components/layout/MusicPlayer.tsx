@@ -40,10 +40,10 @@ export default function MusicPlayer() {
       .catch(() => {});
   }, []);
 
-  // 初始 y 位置：从底部向上偏移 120px
+  // 初始 y 位置：页面垂直居中
   useEffect(() => {
     if (loaded && typeof window !== 'undefined') {
-      setPos(prev => ({ ...prev, y: window.innerHeight - 120 }));
+      setPos(prev => ({ ...prev, y: Math.max(60, window.innerHeight / 2 - 150) }));
     }
   }, [loaded]);
 
@@ -74,7 +74,7 @@ export default function MusicPlayer() {
       const ds = dragState.current;
       setPos({
         x: ds.startPosX + (clientX - ds.startX),
-        y: Math.max(60, Math.min(window.innerHeight - 100, ds.startPosY + (clientY - ds.startY))),
+        y: Math.max(60, Math.min(window.innerHeight - 370, ds.startPosY + (clientY - ds.startY))),
       });
     };
 

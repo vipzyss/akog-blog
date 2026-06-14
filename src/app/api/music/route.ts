@@ -83,13 +83,24 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: '仅支持 MP3 格式' }, { status: 400 });
     }
 
+    // 安全检查：防止路径穿越
+    if (file.name.includes('..') || file.name.includes('/') || file.name.includes('\\')) {
+      return NextResponse.json({ error: '文件名包含非法字符' }, { status: 400 });
+    }
+
+    // 文件名只允许字母数字汉字下划线
+    const safeName = file.name.replace(/[^a-zA-Z0-9\u4e00-\u9fa5_.\-]/g, '_');
+    if (!safeName) {
+      return NextResponse.json({ error: '无效文件名' }, { status: 400 });
+    }
+
     // 限制 20MB
     if (file.size > 20 * 1024 * 1024) {
       return NextResponse.json({ error: '文件大小不能超过 20MB' }, { status: 400 });
     }
 
     // 检查同名文件
-    const destPath = path.join(MUSIC_DIR, file.name);
+    const destPath = path.join(MUSIC_DIR, safeName);
     if (fs.existsSync(destPath)) {
       return NextResponse.json({ error: '已存在同名文件，请先删除或重命名' }, { status: 409 });
     }
@@ -101,9 +112,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       file: {
-        name: file.name,
-        title: file.name.replace(/\.mp3$/i, ''),
-        url: `/music/${encodeURIComponent(file.name)}`,
+        name: safeName,
+        title: safeName.replace(/\.mp3$/i, ''),
+        url: `/music/${encodeURIComponent(safeName)}`,
         size: file.size,
       },
     });

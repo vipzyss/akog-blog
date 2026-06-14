@@ -11,7 +11,10 @@ import {
   saveUsers,
 } from './data';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'akog-blog-secret-change-in-production';
+const SECRET = process.env.JWT_SECRET!;
+if (!process.env.JWT_SECRET) {
+  throw new Error('[auth] JWT_SECRET 环境变量未设置！请在 .env.local 中配置 JWT_SECRET 并在 Vercel 环境变量中也添加。');
+}
 
 // ==================== JWT 工具 ====================
 
@@ -23,13 +26,13 @@ export interface TokenPayload {
 }
 
 export function generateToken(payload: TokenPayload): string {
-  return sign(payload, JWT_SECRET, { expiresIn: '7d' });
+  return sign(payload, SECRET, { expiresIn: '7d' });
 }
 
 export function verifyToken(token: string | null): TokenPayload | null {
   if (!token) return null;
   try {
-    return verify(token, JWT_SECRET) as TokenPayload;
+    return verify(token, SECRET) as TokenPayload;
   } catch {
     return null;
   }
