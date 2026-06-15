@@ -1,7 +1,7 @@
 'use client';
 
 import { usePathname } from 'next/navigation';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { motion as m, AnimatePresence } from 'framer-motion';
 
 /**
@@ -11,15 +11,11 @@ import { motion as m, AnimatePresence } from 'framer-motion';
 export default function GlobalLoading() {
   const pathname = usePathname();
   const [loading, setLoading] = useState(false);
-  const prevPath = useRef(pathname);
 
   useEffect(() => {
-    if (prevPath.current !== pathname) {
-      setLoading(true);
-      const timer = setTimeout(() => setLoading(false), 400);
-      prevPath.current = pathname;
-      return () => clearTimeout(timer);
-    }
+    setLoading(true);
+    const timer = setTimeout(() => setLoading(false), 500);
+    return () => clearTimeout(timer);
   }, [pathname]);
 
   return (
