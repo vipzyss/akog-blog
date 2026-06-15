@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#06b6d4"/>
+      <stop offset="100%" stop-color="#3b82f6"/>
+    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="2" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  <!-- 圆角背景 -->
+  <rect width="120" height="120" rx="28" fill="url(#bg)"/>
+  <!-- 星点装饰 -->
+  <circle cx="22" cy="25" r="2.5" fill="white" opacity="0.6"/>
+  <circle cx="95" cy="20" r="1.5" fill="white" opacity="0.5"/>
+  <circle cx="15" cy="90" r="1.8" fill="white" opacity="0.4"/>
+  <circle cx="102" cy="85" r="2" fill="white" opacity="0.5"/>
+  <circle cx="55" cy="98" r="1.2" fill="white" opacity="0.3"/>
+  <!-- 主字：云（简化艺术写法） -->
+  <g transform="translate(60,68)" filter="url(#glow)">
+    <text fill="white" font-size="58" font-weight="bold" font-family="'SimHei','PingFang SC','Microsoft YaHei',sans-serif" text-anchor="middle">瞬</text>
+  </g>
+  <!-- 底部装饰线 -->
+  <line x1="30" y1="100" x2="90" y2="100" stroke="white" stroke-width="2" stroke-linecap="round" opacity="0.3"/>
+</svg>
