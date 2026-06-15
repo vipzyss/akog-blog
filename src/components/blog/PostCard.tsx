@@ -2,7 +2,6 @@
 
 import Link from 'next/link';
 import Magnetic from '@/components/anime/Magnetic';
-import TiltCard from '@/components/anime/TiltCard';
 import ScrollReveal from '@/components/anime/ScrollReveal';
 import { estimateReadingTime, formatReadingTime } from '@/lib/reading-time';
 
@@ -26,7 +25,6 @@ export default function PostCard({ post, categoryName }: { post: Post; categoryN
   return (
     <ScrollReveal>
       <Magnetic strength={0.2} className="block h-full">
-        <TiltCard maxTilt={6} glare={false} className="h-full">
         <Link
           href={`/posts/${post.slug}`}
           className="group glass-heavy card-hover flex h-full flex-col overflow-hidden rounded-2xl no-underline transition-all duration-500 hover:border-accent/60 hover:shadow-lg hover:shadow-accent/10"
@@ -94,7 +92,6 @@ export default function PostCard({ post, categoryName }: { post: Post; categoryN
             </div>
           </div>
         </Link>
-      </TiltCard>
       </Magnetic>
     </ScrollReveal>
   );

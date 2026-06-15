@@ -12,8 +12,6 @@ import GlobalLoading from '@/components/anime/GlobalLoading';
 import InteractiveBg from '@/components/anime/InteractiveBg';
 import MusicPlayer from '@/components/layout/MusicPlayer';
 import BackToTop from '@/components/anime/BackToTop';
-import PageTransition from '@/components/anime/PageTransition';
-import { MotionConfig } from 'framer-motion';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -75,24 +73,20 @@ export default function RootLayout({
       </head>
       <body className={inter.className}>
         <ThemeProvider attribute="class" defaultTheme="light" enableColorScheme={false}>
-          <MotionConfig reducedMotion="user">
-            {/* 鼠标互动背景粒子 */}
-            <InteractiveBg />
-            <ScrollProgress />
-            <SmoothScroll />
-            <GlobalLoading />
-            <div className="relative z-10 flex min-h-screen flex-col">
-              <Header />
-              <main className="flex-1">
-                <PageTransition>{children}</PageTransition>
-              </main>
-              <Footer />
-              <ThemeToggle />
-              <MusicPlayer />
-              <BackToTop />
-            </div>
-            <Analytics />
-          </MotionConfig>
+          {/* 鼠标互动背景粒子 */}
+          <InteractiveBg />
+          <ScrollProgress />
+          <SmoothScroll />
+          <GlobalLoading />
+          <div className="relative z-10 flex min-h-screen flex-col">
+            <Header />
+            <main className="flex-1">{children}</main>
+            <Footer />
+            <ThemeToggle />
+            <MusicPlayer />
+            <BackToTop />
+          </div>
+          <Analytics />
         </ThemeProvider>
       </body>
     </html>

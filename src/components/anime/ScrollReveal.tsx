@@ -1,7 +1,7 @@
 'use client';
 
 import { type ReactNode } from 'react';
-import { motion, useReducedMotion } from 'framer-motion';
+import { motion } from 'framer-motion';
 
 interface ScrollRevealProps {
   children: ReactNode;
@@ -13,13 +13,11 @@ interface ScrollRevealProps {
 }
 
 const dirMap = {
-  up: { y: 30, x: 0 },
-  down: { y: -30, x: 0 },
-  left: { x: 30, y: 0 },
-  right: { x: -30, y: 0 },
+  up: { y: 40, x: 0 },
+  down: { y: -40, x: 0 },
+  left: { x: 40, y: 0 },
+  right: { x: -40, y: 0 },
 };
-
-const EASE_OUT_QUART = [0.165, 0.84, 0.44, 1] as const;
 
 /** 滚动渐显 — 元素进入视口时从指定方向淡入 */
 export default function ScrollReveal({
@@ -27,27 +25,10 @@ export default function ScrollReveal({
   className = '',
   direction = 'up',
   delay = 0,
-  duration = 0.5,
+  duration = 0.7,
   once = true,
 }: ScrollRevealProps) {
-  const prefersReduced = useReducedMotion();
   const offset = dirMap[direction];
-  const noMotion = prefersReduced || false;
-
-  // 减少动效时：仅淡入，不位移
-  if (noMotion) {
-    return (
-      <motion.div
-        className={className}
-        initial={{ opacity: 0 }}
-        whileInView={{ opacity: 1 }}
-        viewport={{ once, margin: '-30px' }}
-        transition={{ duration: 0.2, delay }}
-      >
-        {children}
-      </motion.div>
-    );
-  }
 
   return (
     <motion.div
@@ -59,7 +40,7 @@ export default function ScrollReveal({
       transition={{
         duration,
         delay,
-        ease: EASE_OUT_QUART,
+        ease: [0.25, 0.46, 0.45, 0.94],
       }}
     >
       {children}
@@ -71,7 +52,7 @@ export default function ScrollReveal({
 export function StaggerList({
   children,
   className = '',
-  staggerDelay = 0.06,
+  staggerDelay = 0.08,
 }: {
   children: ReactNode[];
   className?: string;
