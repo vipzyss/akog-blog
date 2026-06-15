@@ -232,7 +232,7 @@ export async function getPosts(): Promise<Post[]> {
 export async function getPublishedPosts(): Promise<Post[]> {
   const { data, error } = await supabase
     .from('posts')
-    .select('id, slug, title, excerpt, coverImage, categoryId, tagIds, status, publishedAt, views, likes, createdAt, updatedAt, password, scheduledAt')
+    .select('id, slug, title, excerpt, coverImage, categoryId, tagIds, status, publishedAt, views, likes, createdAt, updatedAt')
     .eq('status', 'published')
     .order('createdAt', { ascending: false });
   if (error) { console.error('[data] getPublishedPosts error:', error); return []; }
