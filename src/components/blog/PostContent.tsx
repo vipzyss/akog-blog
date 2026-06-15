@@ -76,9 +76,9 @@ export default function PostContent({ content }: PostContentProps) {
   return (
     <motion.div
       ref={containerRef}
-      initial={{ opacity: 0, y: 20 }}
+      initial={{ opacity: 0, y: 15 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 0.4, duration: 0.5 }}
+      transition={{ delay: 0.25, duration: 0.4, ease: [0.165, 0.84, 0.44, 1] }}
       className="glass-heavy rounded-2xl p-6 md:p-10"
     >
       {hasFileShare ? (

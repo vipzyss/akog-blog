@@ -5,7 +5,35 @@
 /* ============================================
    🎮 瞬云的尽头 - 游戏主题博客
    Color: 蓝白系 (Blue-White) + 青色高亮 (Cyan)
+   Premium Easing System
    ============================================ */
+
+@theme inline {
+  --color-background: var(--bg-primary);
+  --color-foreground: var(--text-primary);
+  --color-accent: var(--accent);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+  /* Easing tokens (usable in Tailwind) */
+  --ease-out-expo: cubic-bezier(0.19, 1, 0.22, 1);
+  --ease-out-quart: cubic-bezier(0.165, 0.84, 0.44, 1);
+  --ease-in-out-expo: cubic-bezier(1, 0, 0, 1);
+}
+
+/* ============================================
+   🎚️ Global Easing CSS Variables
+   ============================================ */
+
+:root {
+  --ease-out-quad: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  --ease-out-cubic: cubic-bezier(0.215, 0.61, 0.355, 1);
+  --ease-out-quart: cubic-bezier(0.165, 0.84, 0.44, 1);
+  --ease-out-quint: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-out-expo: cubic-bezier(0.19, 1, 0.22, 1);
+  --ease-in-out-quart: cubic-bezier(0.77, 0, 0.175, 1);
+  --ease-in-out-expo: cubic-bezier(1, 0, 0, 1);
+  --ease-spring: cubic-bezier(0.16, 1, 0.3, 1);
+}
 
 :root {
   --bg-primary: #f0f4ff;
@@ -173,7 +201,7 @@ img, video, iframe {
 
 .accent-link {
   color: var(--text-primary);
-  transition: color 0.3s ease, text-shadow 0.3s ease;
+  transition: color 150ms var(--ease-out-quad), text-shadow 150ms var(--ease-out-quad);
 }
 
 .accent-link:hover {
@@ -182,8 +210,8 @@ img, video, iframe {
 }
 
 .accent-img {
-  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1),
-    box-shadow 0.4s ease, filter 0.4s ease;
+  transition: transform 350ms var(--ease-spring),
+    box-shadow 250ms var(--ease-out-quad), filter 250ms var(--ease-out-quad);
 }
 
 .accent-img:hover {
@@ -250,42 +278,42 @@ img, video, iframe {
 }
 
 .animate-fade-in-up {
-  animation: fadeInUp 0.6s ease-out forwards;
+  animation: fadeInUp 400ms var(--ease-out-quart) forwards;
 }
 
 .animate-fade-in {
-  animation: fadeIn 0.5s ease-out forwards;
+  animation: fadeIn 300ms var(--ease-out-quad) forwards;
 }
 
 /* Stagger children animations */
 .stagger-children > * {
   opacity: 0;
-  animation: fadeInUp 0.6s ease-out forwards;
+  animation: fadeInUp 400ms var(--ease-out-quart) forwards;
 }
 
 .stagger-children > *:nth-child(1) {
-  animation-delay: 0.05s;
+  animation-delay: 0.03s;
 }
 .stagger-children > *:nth-child(2) {
-  animation-delay: 0.1s;
+  animation-delay: 0.06s;
 }
 .stagger-children > *:nth-child(3) {
-  animation-delay: 0.15s;
+  animation-delay: 0.09s;
 }
 .stagger-children > *:nth-child(4) {
-  animation-delay: 0.2s;
+  animation-delay: 0.12s;
 }
 .stagger-children > *:nth-child(5) {
-  animation-delay: 0.25s;
+  animation-delay: 0.15s;
 }
 .stagger-children > *:nth-child(6) {
-  animation-delay: 0.3s;
+  animation-delay: 0.18s;
 }
 .stagger-children > *:nth-child(7) {
-  animation-delay: 0.35s;
+  animation-delay: 0.21s;
 }
 .stagger-children > *:nth-child(8) {
-  animation-delay: 0.4s;
+  animation-delay: 0.24s;
 }
 
 /* Skeleton loading shimmer */
@@ -362,7 +390,7 @@ img, video, iframe {
   padding: 0.75rem 2rem;
   border-radius: 0.75rem;
   font-weight: 600;
-  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: transform 200ms var(--ease-spring), box-shadow 200ms var(--ease-out-quad);
   box-shadow: 0 4px 20px var(--accent-glow);
   position: relative;
   overflow: hidden;
@@ -375,6 +403,7 @@ img, video, iframe {
 
 .btn-premium:active {
   transform: translateY(0);
+  transition-duration: 50ms;
 }
 
 .btn-premium::after {
@@ -390,7 +419,7 @@ img, video, iframe {
     rgba(255, 255, 255, 0.2),
     transparent
   );
-  transition: left 0.5s;
+  transition: left 400ms var(--ease-out-quad);
 }
 
 .btn-premium:hover::after {
@@ -518,8 +547,8 @@ img, video, iframe {
    ============================================ */
 
 .card-hover {
-  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1),
-    box-shadow 0.4s ease, border-color 0.4s ease;
+  transition: transform 350ms var(--ease-spring),
+    box-shadow 250ms var(--ease-out-quad), border-color 250ms var(--ease-out-quad);
 }
 
 .card-hover:hover {
@@ -621,4 +650,47 @@ div.fixed.bottom-4.left-4 {
   75%  { transform: translate(2px, -5px); clip-path: polygon(0 58%, 100% 62%, 100% 85%, 0 80%); }
   85%  { transform: translate(-9px, -4px); clip-path: polygon(0 32%, 100% 28%, 100% 55%, 0 50%); opacity: 0.3; }
   100% { transform: translate(6px, 3px); clip-path: polygon(0 48%, 100% 52%, 100% 78%, 0 73%); }
+}
+
+/* ============================================
+   ♿ Reduced Motion & Accessibility
+   ============================================ */
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .bg-orb, .bg-orb--1, .bg-orb--2, .bg-orb--3 {
+    animation: none !important;
+  }
+
+  .glitch-text, .glitch-text::before, .glitch-text::after {
+    animation: none !important;
+  }
+
+  .skeleton {
+    animation: none !important;
+    background: var(--glass-bg) !important;
+  }
+}
+
+/* ============================================
+   📱 Touch Device Hover Protection
+   ============================================ */
+
+@media (hover: hover) and (pointer: fine) {
+  .card-hover:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 40px var(--glass-shadow);
+    border-color: var(--accent);
+  }
+
+  .btn-premium:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 30px var(--accent-glow);
+  }
 }

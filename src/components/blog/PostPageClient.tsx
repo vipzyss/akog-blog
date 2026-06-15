@@ -90,7 +90,7 @@ export default function PostPageClient({ post, category, comments, relatedPosts,
             <m.h1
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6 }}
+              transition={{ duration: 0.4, ease: [0.165, 0.84, 0.44, 1] }}
               className="mb-4 text-3xl font-extrabold leading-tight md:text-4xl"
             >
               {post.title}
@@ -99,7 +99,7 @@ export default function PostPageClient({ post, category, comments, relatedPosts,
             <m.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              transition={{ delay: 0.2 }}
+              transition={{ delay: 0.15, duration: 0.3, ease: [0.25, 0.46, 0.45, 0.94] }}
               className="mb-6 flex flex-wrap items-center gap-4 text-sm text-gray-500 dark:text-gray-400"
             >
               {category && (
@@ -131,9 +131,9 @@ export default function PostPageClient({ post, category, comments, relatedPosts,
             {/* 封面图 */}
             {post.coverImage && (
               <m.img
-                initial={{ opacity: 0, scale: 0.95 }}
+                initial={{ opacity: 0, scale: 0.97 }}
                 animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: 0.3, duration: 0.5 }}
+                transition={{ delay: 0.2, duration: 0.4, ease: [0.165, 0.84, 0.44, 1] }}
                 src={post.coverImage}
                 alt={post.title}
                 className="aspect-video w-full rounded-2xl object-cover shadow-xl"

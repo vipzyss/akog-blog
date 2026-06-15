@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useState, type ReactNode, type MouseEvent } from 'react';
+import { useRef, useState, useEffect, type ReactNode, type MouseEvent } from 'react';
 import { motion } from 'framer-motion';
 
 interface MagneticProps {
@@ -13,9 +13,14 @@ interface MagneticProps {
 export default function Magnetic({ children, strength = 0.35, className = '' }: MagneticProps) {
   const ref = useRef<HTMLDivElement>(null);
   const [position, setPosition] = useState({ x: 0, y: 0 });
+  const [isTouch, setIsTouch] = useState(false);
+
+  useEffect(() => {
+    setIsTouch('ontouchstart' in window || navigator.maxTouchPoints > 0);
+  }, []);
 
   const handleMouse = (e: MouseEvent) => {
-    if (!ref.current) return;
+    if (isTouch || !ref.current) return;
     const { clientX, clientY } = e;
     const { left, top, width, height } = ref.current.getBoundingClientRect();
     const x = (clientX - (left + width / 2)) * strength;
@@ -24,6 +29,11 @@ export default function Magnetic({ children, strength = 0.35, className = '' }: 
   };
 
   const reset = () => setPosition({ x: 0, y: 0 });
+
+  // 触屏设备不应用磁吸
+  if (isTouch) {
+    return <div className={className}>{children}</div>;
+  }
 
   return (
     <motion.div
