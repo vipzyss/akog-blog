@@ -116,13 +116,13 @@ export default function Header() {
 
         {/* Desktop Nav */}
         <nav className="hidden items-center gap-1 md:flex">
-          <NavLink href="/">首页</NavLink>
-          <NavLink href="/posts">文章</NavLink>
-          <NavLink href="/categories">分类</NavLink>
+          <NavLink href="/">🏠 首页</NavLink>
+          <NavLink href="/posts">📝 文章</NavLink>
+          <NavLink href="/categories">📂 分类</NavLink>
           <NavLink href="/games">🎮 小游戏</NavLink>
           <NavLink href="/tools">🔧 在线工具</NavLink>
-          <NavLink href="/guestbook">留言板</NavLink>
-          <NavLink href="/about">关于</NavLink>
+          <NavLink href="/guestbook">💬 留言板</NavLink>
+          <NavLink href="/about">👤 关于</NavLink>
         </nav>
 
         {/* Right Side */}
@@ -272,10 +272,10 @@ export default function Header() {
             className="bg-white dark:bg-gray-900 overflow-hidden border-t border-gray-200 dark:border-gray-800 md:hidden"
           >
             <nav className="flex flex-col gap-1 px-6 py-4">
-              <MobileNavLink href="/" onClick={() => setMobileOpen(false)}>首页</MobileNavLink>
-              <MobileNavLink href="/posts" onClick={() => setMobileOpen(false)}>文章</MobileNavLink>
-              <MobileNavLink href="/categories" onClick={() => setMobileOpen(false)}>分类</MobileNavLink>
-              <MobileNavLink href="/about" onClick={() => setMobileOpen(false)}>关于</MobileNavLink>
+              <MobileNavLink href="/" onClick={() => setMobileOpen(false)}>🏠 首页</MobileNavLink>
+              <MobileNavLink href="/posts" onClick={() => setMobileOpen(false)}>📝 文章</MobileNavLink>
+              <MobileNavLink href="/categories" onClick={() => setMobileOpen(false)}>📂 分类</MobileNavLink>
+              <MobileNavLink href="/about" onClick={() => setMobileOpen(false)}>👤 关于</MobileNavLink>
               <MobileNavLink href="/games" onClick={() => setMobileOpen(false)}>🎮 小游戏</MobileNavLink>
               <MobileNavLink href="/tools" onClick={() => setMobileOpen(false)}>🔧 在线工具</MobileNavLink>
               <MobileNavLink href="/guestbook" onClick={() => setMobileOpen(false)}>💬 留言板</MobileNavLink>
