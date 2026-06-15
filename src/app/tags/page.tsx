@@ -1,14 +1,12 @@
 import Link from 'next/link';
-import { getTags, getPosts } from '@/lib/data';
+import { getTags, getPublishedPosts } from '@/lib/data';
 import ScrollReveal from '@/components/anime/ScrollReveal';
 
 export const revalidate = 60;
 
 export default async function TagsPage() {
   const tags = await getTags();
-  const posts = await getPosts();
-
-  const publishedPosts = posts.filter((p) => p.status === 'published');
+  const publishedPosts = await getPublishedPosts();
 
   const tagsWithCount = tags
     .map((tag) => ({

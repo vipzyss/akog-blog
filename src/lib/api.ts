@@ -110,8 +110,6 @@ export const apiPut = api.put;
 export const apiDelete = api.del;
 /** @deprecated 使用 getAdminToken 替代 */
 export const getAuthToken = getAdminToken;
-/** @deprecated 使用 setAdminToken 替代 */
-export const setAuthToken = setAdminToken;
 /** @deprecated 使用 clearAdminToken 替代 */
 export const clearAuthToken = clearAdminToken;
 

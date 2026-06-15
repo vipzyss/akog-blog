@@ -1,13 +1,11 @@
-import { getPosts, getCategories, getTags } from '@/lib/data';
+import { getPublishedPosts, getCategories, getTags } from '@/lib/data';
 
 const SITE_URL = 'https://akog-blog.vercel.app';
 
 export async function GET() {
-  const posts = await getPosts();
+  const publishedPosts = await getPublishedPosts();
   const categories = await getCategories();
   const tags = await getTags();
-
-  const publishedPosts = posts.filter((p) => p.status === 'published');
 
   const urls = [
     '',

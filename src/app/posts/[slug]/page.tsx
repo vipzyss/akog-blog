@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation';
-import { getPostBySlug, getPosts, getCategories, getCommentsByPost, getTags } from '@/lib/data';
+import { getPostBySlug, getPublishedPosts, getCategories, getCommentsByPost } from '@/lib/data';
 import PostPageClient from '@/components/blog/PostPageClient';
 
 export const revalidate = 60;
@@ -20,10 +20,10 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
   const category = categories.find((c) => c.id === post.categoryId);
   const comments = await getCommentsByPost(post.id);
 
-  // 相关文章：按相同分类 + 相同标签排序
-  const allPosts = await getPosts();
+  // 相关文章：轻量查询，不含富文本内容
+  const allPosts = await getPublishedPosts();
   const relatedPosts = allPosts
-    .filter((p) => p.id !== post.id && p.status === 'published')
+    .filter((p) => p.id !== post.id)
     .map((p) => {
       let score = 0;
       if (p.categoryId === post.categoryId) score += 3;

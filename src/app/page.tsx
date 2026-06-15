@@ -1,10 +1,10 @@
-import { getPosts, getCategories, initDefaultData } from '@/lib/data';
+import { getPublishedPosts, getCategories, initDefaultData } from '@/lib/data';
 import { HeroSection, CategoryNav, PostGrid } from '@/components/home/HomeClient';
 
 export const revalidate = 60;
 
 async function getFeaturedPosts() {
-  const posts = await getPosts();
+  const posts = await getPublishedPosts();
   const categories = await getCategories();
 
   return posts
@@ -27,10 +27,10 @@ async function getFeaturedPosts() {
 
 async function getCategoriesWithCount() {
   const categories = await getCategories();
-  const posts = await getPosts();
+  const posts = await getPublishedPosts();
   return categories.map((cat) => ({
     ...cat,
-    count: posts.filter((p) => p.categoryId === cat.id && p.status === 'published').length,
+    count: posts.filter((p) => p.categoryId === cat.id).length,
   }));
 }
 

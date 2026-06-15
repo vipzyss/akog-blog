@@ -86,22 +86,6 @@ export async function loginAdmin(identifier: string, password: string): Promise<
   };
 }
 
-export async function changeAdminPassword(
-  userId: string,
-  oldPassword: string,
-  newPassword: string
-): Promise<{ success: boolean; error?: string }> {
-  const users = await getUsers();
-  const targetIdx = users.findIndex((u) => u.id === userId);
-  if (targetIdx === -1) return { success: false, error: '用户不存在' };
-  if (!compareSync(oldPassword, users[targetIdx].passwordHash)) {
-    return { success: false, error: '原密码错误' };
-  }
-  users[targetIdx].passwordHash = hashSync(newPassword, 10);
-  await saveUsers(users);
-  return { success: true };
-}
-
 // ==================== 前台读者注册/登录 ====================
 
 export interface ReaderAuthResult {

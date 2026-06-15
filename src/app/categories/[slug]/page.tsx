@@ -1,4 +1,4 @@
-import { getCategories, getPosts } from '@/lib/data';
+import { getCategories, getPublishedPosts } from '@/lib/data';
 import PostCardClient from './PostCardClient';
 import type { Metadata } from 'next';
 
@@ -28,8 +28,8 @@ export default async function CategoryPage({ params }: Props) {
     );
   }
 
-  const posts = (await getPosts())
-    .filter((p) => p.categoryId === cat.id && p.status === 'published')
+  const posts = (await getPublishedPosts())
+    .filter((p) => p.categoryId === cat.id)
     .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
   const postSummaries = posts.map((p) => ({

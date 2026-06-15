@@ -1,4 +1,4 @@
-import { getCategories, getPosts } from '@/lib/data';
+import { getCategories, getPublishedPosts } from '@/lib/data';
 import Link from 'next/link';
 import type { Metadata } from 'next';
 
@@ -8,7 +8,7 @@ export const metadata: Metadata = {
 
 export default async function CategoriesPage() {
   const categories = await getCategories();
-  const posts = await getPosts();
+  const posts = await getPublishedPosts();
 
   const catsWithCount = categories.map((cat) => ({
     ...cat,

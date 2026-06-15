@@ -228,6 +228,17 @@ export async function getPosts(): Promise<Post[]> {
   return (data || []).map(mapPost);
 }
 
+/** 获取已发布文章的简化列表（不含富文本内容，用于首页/列表/相关推荐） */
+export async function getPublishedPosts(): Promise<Post[]> {
+  const { data, error } = await supabase
+    .from('posts')
+    .select('id, slug, title, excerpt, coverImage, categoryId, tagIds, status, publishedAt, views, likes, createdAt, updatedAt, password, scheduledAt')
+    .eq('status', 'published')
+    .order('createdAt', { ascending: false });
+  if (error) { console.error('[data] getPublishedPosts error:', error); return []; }
+  return (data || []).map(mapPost);
+}
+
 export async function getPostById(id: string): Promise<Post | null> {
   const { data, error } = await supabase.from('posts').select('*').eq('id', id).single();
   if (error || !data) return null;
