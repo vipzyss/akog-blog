@@ -320,6 +320,7 @@ export default function NewPostPage() {
           <TipTapEditor
             content={post.richContent}
             onChange={(html) => setPost((p) => ({ ...p, richContent: html, content: html }))}
+            draftKey={editId || 'new-post'}
           />
         </div>
       </div>

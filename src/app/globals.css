@@ -25,6 +25,7 @@
   --orb-1: rgba(102, 126, 234, 0.12);
   --orb-2: rgba(6, 182, 212, 0.08);
   --orb-3: rgba(59, 130, 246, 0.06);
+  --article-font-size: 1.05rem;
 }
 
 .dark {
@@ -402,8 +403,9 @@ img, video, iframe {
 
 .prose-custom {
   line-height: 1.8;
-  font-size: 1.05rem;
+  font-size: var(--article-font-size, 1.05rem);
   color: var(--text-primary);
+  transition: font-size 0.2s ease;
 }
 
 .prose-custom h1,

@@ -11,11 +11,19 @@ interface FriendLink {
 
 export default function Footer() {
   const [friendLinks, setFriendLinks] = useState<FriendLink[]>([]);
+  const [visitorCount, setVisitorCount] = useState<number | null>(null);
 
   useEffect(() => {
     fetch('/api/friend-links')
       .then((res) => res.json())
       .then((data) => setFriendLinks(data))
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    fetch('/api/visitor-count')
+      .then((res) => res.json())
+      .then((data) => setVisitorCount(data.count))
       .catch(() => {});
   }, []);
 
@@ -47,7 +55,12 @@ export default function Footer() {
           </div>
         )}
 
-        <p>© {new Date().getFullYear()} 瞬云的尽头. 保留所有权利。</p>
+        <p className="mb-1">© {new Date().getFullYear()} 瞬云的尽头. 保留所有权利。</p>
+        {visitorCount !== null && (
+          <p className="text-xs text-gray-400">
+            👋 已有 <span className="font-semibold text-accent">{visitorCount.toLocaleString()}</span> 位访客
+          </p>
+        )}
       </div>
     </footer>
   );

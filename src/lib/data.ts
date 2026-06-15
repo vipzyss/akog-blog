@@ -16,6 +16,7 @@ if (!supabaseUrl || !supabaseKey) {
 }
 
 const supabase = createClient(supabaseUrl, supabaseKey);
+export { supabase };
 
 /**
  * 通用 JSON 读写工具函数 —— 供验证码等临时数据使用
@@ -218,6 +219,7 @@ export interface Post {
   likes: number;
   createdAt: string;
   updatedAt: string;
+  password?: string | null;
 }
 
 export async function getPosts(): Promise<Post[]> {
@@ -419,6 +421,7 @@ export interface Comment {
   approved: boolean;
   createdAt: string;
   readerId?: string | null;
+  parentId?: string | null;
 }
 
 export async function getComments(): Promise<Comment[]> {
@@ -448,6 +451,7 @@ export async function createComment(data: Partial<Comment>): Promise<Comment> {
     approved: false,
     createdAt: new Date().toISOString(),
     readerId: data.readerId || null,
+    parentId: data.parentId || null,
   };
   const { error } = await supabase.from('comments').insert(comment);
   if (error) console.error('[data] createComment error:', error);

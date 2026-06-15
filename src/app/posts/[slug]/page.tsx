@@ -43,6 +43,7 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
       category={category}
       comments={comments}
       relatedPosts={relatedPosts}
+      postPassword={post.password}
     />
   );
 }

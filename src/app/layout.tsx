@@ -11,6 +11,7 @@ import SmoothScroll from '@/components/anime/SmoothScroll';
 import GlobalLoading from '@/components/anime/GlobalLoading';
 import InteractiveBg from '@/components/anime/InteractiveBg';
 import MusicPlayer from '@/components/layout/MusicPlayer';
+import BackToTop from '@/components/anime/BackToTop';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -83,6 +84,7 @@ export default function RootLayout({
             <Footer />
             <ThemeToggle />
             <MusicPlayer />
+            <BackToTop />
           </div>
           <Analytics />
         </ThemeProvider>
