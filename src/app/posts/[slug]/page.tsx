@@ -16,12 +16,16 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
   const post = await getPostBySlug(slug);
   if (!post || post.status !== 'published') notFound();
 
-  const categories = await getCategories();
-  const category = categories.find((c) => c.id === post.categoryId);
-  const comments = await getCommentsByPost(post.id);
+  // 并行加载：分类、评论、相关文章（3个查询并发，而非顺序等待）
+  const [categories, comments, allPosts] = await Promise.all([
+    getCategories(),
+    getCommentsByPost(post.id),
+    getPublishedPosts(),
+  ]);
 
-  // 相关文章：轻量查询，不含富文本内容
-  const allPosts = await getPublishedPosts();
+  const category = categories.find((c) => c.id === post.categoryId);
+
+  // 相关文章：轻量查询，不含富文本
   const relatedPosts = allPosts
     .filter((p) => p.id !== post.id)
     .map((p) => {
