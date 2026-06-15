@@ -47,7 +47,17 @@ export default function AboutPage() {
             </h2>
             <div className="space-y-2 text-sm text-gray-500">
               <p>📧 Email: vipzyss@gmail.com</p>
-              <p>🐙 GitHub: 暂无</p>
+              <p>
+                🐙 GitHub:{' '}
+                <a
+                  href="https://github.com/vipzyss/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-accent hover:underline"
+                >
+                  https://github.com/vipzyss/
+                </a>
+              </p>
               <p>🐦 Twitter: @sy_eclipse</p>
             </div>
           </div>
