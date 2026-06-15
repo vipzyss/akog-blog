@@ -3,6 +3,7 @@
 import { useEffect, useRef, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import DOMPurify from 'dompurify';
+import hljs from 'highlight.js';
 import FileShareBlock from './FileShareBlock';
 
 interface PostContentProps {
@@ -61,6 +62,14 @@ export default function PostContent({ content }: PostContentProps) {
     const headings = containerRef.current.querySelectorAll('h1, h2, h3');
     headings.forEach((h, i) => {
       if (!h.id) h.id = `heading-${i}`;
+    });
+  }, [content]);
+
+  // 代码语法高亮
+  useEffect(() => {
+    if (!containerRef.current) return;
+    containerRef.current.querySelectorAll('pre code').forEach((block) => {
+      hljs.highlightElement(block as HTMLElement);
     });
   }, [content]);
 

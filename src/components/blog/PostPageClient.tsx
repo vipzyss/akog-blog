@@ -6,31 +6,56 @@ import PostContent from '@/components/blog/PostContent';
 import TableOfContents from '@/components/blog/TableOfContents';
 import CommentSection from '@/components/blog/CommentSection';
 import ShareButton from '@/components/blog/ShareButton';
+import RelatedPosts from '@/components/blog/RelatedPosts';
+import ImageLightbox from '@/components/blog/ImageLightbox';
 import Link from 'next/link';
 import type { Category, Comment } from '@/lib/data';
-
-interface Post {
-  id: string;
-  title: string;
-  slug: string;
-  richContent: string;
-  content: string;
-  coverImage: string;
-  categoryId: string | null;
-  publishedAt: string | null;
-  views: number;
-  likes: number;
-}
+import type { Post } from '@/lib/data';
+import { estimateReadingTime, formatReadingTime } from '@/lib/reading-time';
 
 interface Props {
   post: Post;
   category: Category | undefined;
   comments: Comment[];
+  relatedPosts: Post[];
 }
 
-export default function PostPageClient({ post, category, comments }: Props) {
+export default function PostPageClient({ post, category, comments, relatedPosts }: Props) {
+  const readingTime = estimateReadingTime(post.richContent || post.content);
+
+  // JSON-LD 结构化数据
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'BlogPosting',
+    headline: post.title,
+    description: post.excerpt || post.title,
+    image: post.coverImage || undefined,
+    datePublished: post.publishedAt || undefined,
+    dateModified: undefined,
+    author: {
+      '@type': 'Person',
+      name: '瞬云的尽头',
+    },
+    publisher: {
+      '@type': 'Person',
+      name: '瞬云的尽头',
+    },
+    mainEntityOfPage: {
+      '@type': 'WebPage',
+      '@id': `https://akog-blog.vercel.app/posts/${post.slug}`,
+    },
+    wordCount: (post.richContent || post.content).replace(/<[^>]*>/g, '').length,
+    timeRequired: `PT${readingTime}M`,
+  };
+
   return (
-    <article className="mx-auto max-w-6xl px-6 py-12">
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <ImageLightbox />
+      <article className="mx-auto max-w-6xl px-6 py-12">
       <div className="grid gap-8 lg:grid-cols-[1fr_300px]">
         {/* 主内容区 */}
         <div>
@@ -81,6 +106,13 @@ export default function PostPageClient({ post, category, comments }: Props) {
               </span>
               <span>👁️ {post.views} 次阅读</span>
               <span>❤️ {post.likes || 0} 次点赞</span>
+              <span className="flex items-center gap-1">
+                <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6l4 2" />
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 2a10 10 0 100 20 10 10 0 000-20z" />
+                </svg>
+                {formatReadingTime(readingTime)}
+              </span>
               <ShareButton title={post.title} />
             </m.div>
 
@@ -105,6 +137,14 @@ export default function PostPageClient({ post, category, comments }: Props) {
             <LikeButton postId={post.id} postSlug={post.slug} initialLikes={post.likes || 0} />
           </div>
 
+          {/* 相关文章推荐 */}
+          {relatedPosts.length > 0 && (
+            <>
+              <hr className="my-12 border-white/10" />
+              <RelatedPosts posts={relatedPosts} currentPostId={post.id} />
+            </>
+          )}
+
           {/* 评论区 */}
           <hr className="my-12 border-white/10" />
           <CommentSection postId={post.id} initialComments={comments} />
@@ -118,6 +158,7 @@ export default function PostPageClient({ post, category, comments }: Props) {
         </div>
       </div>
     </article>
+    </>
   );
 }
 

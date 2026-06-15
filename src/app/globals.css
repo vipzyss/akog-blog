@@ -1,4 +1,6 @@
 @import "tailwindcss";
+@import "highlight.js/styles/github.css";
+@import "../styles/syntax-dark.css";
 
 /* ============================================
    🎮 瞬云的尽头 - 游戏主题博客
@@ -456,6 +458,41 @@ img, video, iframe {
   overflow-x: auto;
   margin: 1.5rem 0;
   border: 1px solid var(--glass-border);
+  position: relative;
+}
+
+/* Code block language label */
+.prose-custom pre::before {
+  content: attr(data-language);
+  position: absolute;
+  top: 8px;
+  right: 12px;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  opacity: 0.6;
+  font-family: var(--font-mono, monospace);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* Copy code button */
+.prose-custom pre .copy-btn {
+  position: absolute;
+  top: 8px;
+  left: 12px;
+  font-size: 0.7rem;
+  padding: 2px 8px;
+  border-radius: 4px;
+  opacity: 0;
+  transition: opacity 0.2s;
+  cursor: pointer;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  color: var(--text-secondary);
+}
+
+.prose-custom pre:hover .copy-btn {
+  opacity: 0.7;
 }
 
 .prose-custom pre code {

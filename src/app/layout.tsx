@@ -15,8 +15,32 @@ import MusicPlayer from '@/components/layout/MusicPlayer';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: '瞬云的尽头 - 探索虚拟世界的无限可能',
+  title: {
+    default: '瞬云的尽头 - 探索虚拟世界的无限可能',
+    template: '%s - 瞬云的尽头',
+  },
   description: '游戏与开发主题个人博客，记录虚拟世界中的探索与创造',
+  keywords: ['博客', '游戏', '开发', '二次元', '瞬云的尽头', '个人博客'],
+  authors: [{ name: '瞬云的尽头' }],
+  openGraph: {
+    type: 'website',
+    locale: 'zh_CN',
+    siteName: '瞬云的尽头',
+    title: '瞬云的尽头 - 探索虚拟世界的无限可能',
+    description: '游戏与开发主题个人博客，记录虚拟世界中的探索与创造',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: '瞬云的尽头',
+    description: '游戏与开发主题个人博客',
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
+  icons: {
+    icon: '/favicon.ico',
+  },
 };
 
 export default function RootLayout({
@@ -28,6 +52,23 @@ export default function RootLayout({
     <html lang="zh-CN" suppressHydrationWarning>
       <head>
         <link rel="icon" href="/favicon.ico" />
+        <link rel="manifest" href="/manifest.json" />
+        <meta name="theme-color" content="#06b6d4" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+        <meta name="apple-mobile-web-app-title" content="瞬云博客" />
+        {/* PWA 注册 */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              if ('serviceWorker' in navigator) {
+                window.addEventListener('load', () => {
+                  navigator.serviceWorker.register('/sw.js');
+                });
+              }
+            `,
+          }}
+        />
       </head>
       <body className={inter.className}>
         <ThemeProvider attribute="class" defaultTheme="light" enableColorScheme={false}>

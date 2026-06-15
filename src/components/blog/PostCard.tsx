@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import Magnetic from '@/components/anime/Magnetic';
 import ScrollReveal from '@/components/anime/ScrollReveal';
+import { estimateReadingTime, formatReadingTime } from '@/lib/reading-time';
 
 interface Post {
   id: string;
@@ -15,9 +16,12 @@ interface Post {
   publishedAt: string | null;
   views: number;
   categoryName?: string;
+  richContent?: string;
+  content?: string;
 }
 
 export default function PostCard({ post, categoryName }: { post: Post; categoryName?: string }) {
+  const readingTime = estimateReadingTime(post.richContent || post.content || '');
   return (
     <ScrollReveal>
       <Magnetic strength={0.2} className="block h-full">
@@ -69,13 +73,22 @@ export default function PostCard({ post, categoryName }: { post: Post; categoryN
                     })
                   : '未发布'}
               </span>
-              <span className="flex items-center gap-1">
-                <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                </svg>
-                {post.views}
-              </span>
+              <div className="flex items-center gap-3">
+                <span className="flex items-center gap-1">
+                  <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6l4 2" />
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 2a10 10 0 100 20 10 10 0 000-20z" />
+                  </svg>
+                  {formatReadingTime(readingTime)}
+                </span>
+                <span className="flex items-center gap-1">
+                  <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                  </svg>
+                  {post.views}
+                </span>
+              </div>
             </div>
           </div>
         </Link>

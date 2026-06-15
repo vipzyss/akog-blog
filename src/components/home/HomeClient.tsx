@@ -6,6 +6,7 @@ import { motion as m } from 'framer-motion';
 import PostCard from '@/components/blog/PostCard';
 import ScrollReveal from '@/components/anime/ScrollReveal';
 import Magnetic from '@/components/anime/Magnetic';
+import Typewriter from '@/components/anime/Typewriter';
 
 interface CategoryWithCount {
   id: string;
@@ -53,7 +54,17 @@ export function HeroSection() {
             transition={{ delay: 0.5, duration: 0.8 }}
             className="mb-8 text-lg text-gray-500 dark:text-gray-400"
           >
-            探索虚拟世界的无限可能
+            <Typewriter
+              texts={[
+                '探索虚拟世界的无限可能',
+                '记录游戏与开发的点点滴滴',
+                '二次元 × 技术 × 生活',
+                '欢迎来到瞬云的尽头',
+              ]}
+              speed={70}
+              deleteSpeed={30}
+              pauseDelay={2500}
+            />
           </m.p>
           <m.div
             initial={{ opacity: 0, y: 20 }}
