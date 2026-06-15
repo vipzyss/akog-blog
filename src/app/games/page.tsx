@@ -4,11 +4,15 @@ import { useState } from 'react';
 import { motion as m, AnimatePresence } from 'framer-motion';
 import MemoryMatch from '@/components/games/MemoryMatch';
 import WhackAMole from '@/components/games/WhackAMole';
+import Sudoku from '@/components/games/Sudoku';
+import Gomoku from '@/components/games/Gomoku';
 import ScrollReveal from '@/components/anime/ScrollReveal';
 
 const GAMES = [
-  { id: 'memory', name: '🧩 翻牌配对', desc: '找出所有配对的二次元表情', emoji: '🧩', component: MemoryMatch },
-  { id: 'mole', name: '🐹 打地鼠', desc: '30秒内尽可能多打地鼠！', emoji: '🔨', component: WhackAMole },
+  { id: 'memory', name: '🧩 翻牌配对', desc: '找出所有配对的二次元表情', emoji: '🧩', component: MemoryMatch, col: 1 },
+  { id: 'mole', name: '🐹 打地鼠', desc: '30秒内尽可能多打地鼠！', emoji: '🔨', component: WhackAMole, col: 1 },
+  { id: 'sudoku', name: '🧮 数独', desc: '经典数字逻辑游戏，挑战你的大脑', emoji: '🧮', component: Sudoku, col: 1 },
+  { id: 'gomoku', name: '⚫ 五子棋', desc: '与朋友对战，五子连珠即胜', emoji: '⚫', component: Gomoku, col: 1 },
 ];
 
 export default function GamesPage() {
@@ -27,7 +31,7 @@ export default function GamesPage() {
       {!activeGame && (
         <div className="grid gap-6 sm:grid-cols-2">
           {GAMES.map((game, i) => (
-            <ScrollReveal key={game.id} delay={i * 0.1}>
+            <ScrollReveal key={game.id} delay={i * 0.08}>
               <m.button
                 onClick={() => setActiveGame(game.id)}
                 className="group glass-heavy w-full rounded-2xl p-8 text-left transition-all duration-300 hover:shadow-lg hover:shadow-accent/10 hover:border-accent/40 border border-transparent"

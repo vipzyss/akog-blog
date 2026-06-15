@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion as m, AnimatePresence } from 'framer-motion';
 
 const GRID_SIZE = 9; // 3x3
@@ -14,44 +14,52 @@ export default function WhackAMole() {
   const [playing, setPlaying] = useState(false);
   const [gameOver, setGameOver] = useState(false);
   const [hitEffect, setHitEffect] = useState<number | null>(null);
+
+  // Refs 避免闭包陷阱
+  const playingRef = useRef(false);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const moleTimerRef = useRef<NodeJS.Timeout | null>(null);
 
-  const clearTimers = useCallback(() => {
+  const clearTimers = () => {
     if (timerRef.current) clearInterval(timerRef.current);
     if (moleTimerRef.current) clearTimeout(moleTimerRef.current);
     timerRef.current = null;
     moleTimerRef.current = null;
-  }, []);
+  };
 
-  const spawnMole = useCallback(() => {
-    if (!playing) return;
+  const spawnMole = () => {
+    if (!playingRef.current) return;
     const hole = Math.floor(Math.random() * GRID_SIZE);
     setActiveHole(hole);
 
     const duration = MOLE_SHOW_TIME[0] + Math.random() * (MOLE_SHOW_TIME[1] - MOLE_SHOW_TIME[0]);
     moleTimerRef.current = setTimeout(() => {
       setActiveHole(null);
-      if (playing) spawnMole();
+      // 使用 ref 读取最新 playing 状态，避免闭包陷阱
+      if (playingRef.current) spawnMole();
     }, duration);
-  }, [playing]);
+  };
 
-  const startGame = useCallback(() => {
+  const startGame = () => {
     clearTimers();
     setScore(0);
     setTimeLeft(GAME_DURATION);
     setGameOver(false);
     setActiveHole(null);
+
+    // 先设置 ref（立即生效），再设置 state（异步）
+    playingRef.current = true;
     setPlaying(true);
 
-    // 延迟生成第一只地鼠
-    setTimeout(() => spawnMole(), 500);
+    // 延迟生成第一只地鼠 — 使用ref避免了闭包过期
+    setTimeout(() => spawnMole(), 400);
 
     // 游戏计时
     timerRef.current = setInterval(() => {
       setTimeLeft((prev) => {
         if (prev <= 1) {
           clearTimers();
+          playingRef.current = false;
           setPlaying(false);
           setGameOver(true);
           setActiveHole(null);
@@ -60,14 +68,14 @@ export default function WhackAMole() {
         return prev - 1;
       });
     }, 1000);
-  }, [clearTimers, spawnMole]);
+  };
 
   useEffect(() => {
     return () => clearTimers();
-  }, [clearTimers]);
+  }, []);
 
   const whack = (hole: number) => {
-    if (!playing || hole !== activeHole) return;
+    if (!playingRef.current || hole !== activeHole) return;
     setScore((s) => s + 1);
     setHitEffect(hole);
     setTimeout(() => setHitEffect(null), 200);
@@ -94,7 +102,7 @@ export default function WhackAMole() {
           </button>
         )}
         {playing && (
-          <button onClick={() => { clearTimers(); setPlaying(false); setGameOver(true); }} className="text-sm text-gray-400 hover:text-red-500 transition">
+          <button onClick={() => { clearTimers(); playingRef.current = false; setPlaying(false); setGameOver(true); }} className="text-sm text-gray-400 hover:text-red-500 transition">
             结束
           </button>
         )}
@@ -121,6 +129,7 @@ export default function WhackAMole() {
               <AnimatePresence>
                 {activeHole === i && (
                   <m.div
+                    key="mole"
                     initial={{ y: '100%' }}
                     animate={{ y: '15%' }}
                     exit={{ y: '100%' }}
@@ -135,6 +144,7 @@ export default function WhackAMole() {
                       {/* 击打特效 */}
                       {hitEffect === i && (
                         <m.div
+                          key="hit"
                           initial={{ scale: 0.5, opacity: 1 }}
                           animate={{ scale: 2.5, opacity: 0 }}
                           transition={{ duration: 0.3 }}
