@@ -42,6 +42,20 @@ next-env.d.ts
 
 # WorkBuddy
 .workbuddy/
-# Data files (keep in repo)
-!data/
+# AI context files
+AGENTS.md
+CLAUDE.md
+# Archives
+*.tar.gz
+# Work artifacts
+overview.md
+# Deploy scripts
+deploy.sh
+# Old JSON data files
+data/*.json
+# Uploaded media
+public/uploads/
+public/music/
+# Duplicate migration script
+scripts/migrate-data.ts
 .vercel
