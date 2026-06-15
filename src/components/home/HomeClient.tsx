@@ -33,17 +33,18 @@ export function HeroSection() {
     <section className="relative mb-20 overflow-hidden">
       {/* 视差背景光晕 */}
       <ParallaxGlow />
-      <div className="glass-heavy rounded-[40px] p-10 md:p-16">
+      <div className="glass-heavy rounded-[40px] p-10 md:p-16 relative overflow-hidden">
+        {/* 进入动画容器 */}
         <m.div
-          initial={{ opacity: 0, y: 40 }}
+          initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+          transition={{ duration: 0.6, ease: [0.165, 0.84, 0.44, 1] }}
           className="mx-auto max-w-2xl text-center"
         >
           <m.h1
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2, duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+            initial={{ opacity: 0, y: 20, scale: 0.97 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            transition={{ delay: 0.1, duration: 0.5, ease: [0.165, 0.84, 0.44, 1] }}
             className="mb-6 text-4xl font-extrabold leading-tight md:text-6xl"
           >
             <span className="gradient-text-cyan">瞬云的尽头</span>
@@ -51,7 +52,7 @@ export function HeroSection() {
           <m.p
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ delay: 0.5, duration: 0.8 }}
+            transition={{ delay: 0.3, duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] }}
             className="mb-8 text-lg text-gray-500 dark:text-gray-400"
           >
             <Typewriter
@@ -67,9 +68,9 @@ export function HeroSection() {
             />
           </m.p>
           <m.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.8, duration: 0.6 }}
+            transition={{ delay: 0.45, duration: 0.4, ease: [0.165, 0.84, 0.44, 1] }}
             className="flex justify-center gap-4"
           >
             <Magnetic strength={0.25}>

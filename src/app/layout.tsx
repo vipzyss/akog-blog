@@ -12,6 +12,7 @@ import GlobalLoading from '@/components/anime/GlobalLoading';
 import InteractiveBg from '@/components/anime/InteractiveBg';
 import MusicPlayer from '@/components/layout/MusicPlayer';
 import BackToTop from '@/components/anime/BackToTop';
+import PageTransition from '@/components/anime/PageTransition';
 import { MotionConfig } from 'framer-motion';
 
 const inter = Inter({ subsets: ['latin'] });
@@ -82,7 +83,9 @@ export default function RootLayout({
             <GlobalLoading />
             <div className="relative z-10 flex min-h-screen flex-col">
               <Header />
-              <main className="flex-1">{children}</main>
+              <main className="flex-1">
+                <PageTransition>{children}</PageTransition>
+              </main>
               <Footer />
               <ThemeToggle />
               <MusicPlayer />
