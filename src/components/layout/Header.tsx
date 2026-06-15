@@ -120,6 +120,7 @@ export default function Header() {
           <NavLink href="/posts">文章</NavLink>
           <NavLink href="/categories">分类</NavLink>
           <NavLink href="/tags">标签</NavLink>
+          <NavLink href="/games">🎮 小游戏</NavLink>
           <NavLink href="/guestbook">留言板</NavLink>
           <NavLink href="/about">关于</NavLink>
         </nav>
@@ -276,6 +277,7 @@ export default function Header() {
               <MobileNavLink href="/categories" onClick={() => setMobileOpen(false)}>分类</MobileNavLink>
               <MobileNavLink href="/tags" onClick={() => setMobileOpen(false)}>标签</MobileNavLink>
               <MobileNavLink href="/about" onClick={() => setMobileOpen(false)}>关于</MobileNavLink>
+              <MobileNavLink href="/games" onClick={() => setMobileOpen(false)}>🎮 小游戏</MobileNavLink>
               <MobileNavLink href="/guestbook" onClick={() => setMobileOpen(false)}>💬 留言板</MobileNavLink>
               <MobileNavLink href="/search" onClick={() => setMobileOpen(false)}>🔍 搜索</MobileNavLink>
 
