@@ -54,9 +54,8 @@ overview.md
 deploy.sh
 # Old JSON data files
 data/*.json
-# Uploaded media
+# Uploaded media (stored in Supabase Storage)
 public/uploads/
-public/music/
 # Duplicate migration script
 scripts/migrate-data.ts
 .vercel
